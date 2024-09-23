@@ -15,7 +15,11 @@ import {
   GlowLayer,
   AbstractMesh,
   GPUPicker,
+  BlurPostProcess,
+  Vector2,
+  Color4,
 } from "@babylonjs/core/";
+import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import "@babylonjs/loaders";
 
 import { Ground } from "./ground";
@@ -28,6 +32,11 @@ import {
 
 export default class MainScene {
   private camera: ArcRotateCamera;
+  private isPickedGood: boolean = false;
+  private meshPicked: AbstractMesh;
+  private roomPicker: GPUPicker;
+  private pickArray: Array<Mesh> = [];
+  private instaMesh: InstancedMesh | Mesh;
 
   constructor(
     private scene: Scene,
@@ -148,10 +157,10 @@ export default class MainScene {
     top.style.top = "10px";
     top.style.right = "10px";
     top.style.color = "yellow";
-    top.innerHTML = "top";
+    top.innerHTML = "Press R to view closer";
     document.body.appendChild(top);
     //
-    const pickArray: Array<Mesh> = [];
+
     //
     const gl = new GlowLayer("gl");
     gl.intensity = 0.7;
@@ -159,35 +168,74 @@ export default class MainScene {
       if (item.glow) {
         gl.addIncludedOnlyMesh(this.scene.getMeshByName(item.name) as Mesh);
       }
-      pickArray.push(this.scene.getMeshByName(item.name) as Mesh);
+      this.pickArray.push(this.scene.getMeshByName(item.name) as Mesh);
     }
     //
-    const picker = new GPUPicker();
-    picker.setPickingList(pickArray);
-    console.log(picker);
+    this.roomPicker = new GPUPicker();
+    this.roomPicker.setPickingList(this.pickArray);
+    console.log(this.roomPicker);
     //
 
     this.scene.onPointerObservable.add(() => {
-      picker
+      this.roomPicker
         .pickAsync(this.scene.pointerX, this.scene.pointerY)
         .then((pickingInfo) => {
           if (pickingInfo) {
-            //    console.log(pickingInfo);
-            /*
-            const distance = BABYLON.Vector3.Distance(
-              this.scene.activeCamera!.position,
-              pickingInfo.mesh.position
-            );
-            */
-            //console.log(distance);
-            //  console.log(pickingInfo.mesh.name);
-
-            top.innerHTML = pickingInfo.mesh.name;
+            console.log(pickingInfo.mesh.name);
+            if (this.scene.activeCamera!.name == "camera") {
+              this.isPickedGood = true;
+              this.meshPicked = pickingInfo.mesh;
+              top.innerHTML =
+                pickingInfo.mesh.name + "<br>Press R to view closer";
+            }
           } else {
+            this.isPickedGood = false;
             top.innerHTML = "";
           }
         });
     });
+    //
+
+    let gKeyCounter = 0;
+    let rKeyCounter = 0;
+    document.addEventListener("keyup", (event) => {
+      const keyName = event.key;
+      if (keyName === "g" || keyName === "G") {
+        gKeyCounter++;
+        if (gKeyCounter % 2 == 0) {
+          this.scene.debugLayer.hide();
+        } else {
+          this.scene.debugLayer.show();
+        }
+      }
+      if (keyName === "r" || keyName === "R") {
+        rKeyCounter++;
+        if (rKeyCounter % 2 == 0) {
+          console.log("counter Reset");
+          this.removeBlur();
+          this.isPickedGood = false;
+          // this.restoreCamera();
+        } else {
+          console.log("START");
+          //   this.showMore();
+          if (this.isPickedGood) {
+            console.log("isPickedGood ", this.isPickedGood);
+            console.log(this.meshPicked.name);
+            this.makeBlur();
+          }
+        }
+      }
+    }); // end event
+    //
+
+    //
+    /*
+    //
+    setTimeout(() => {
+      this.removeBlur();
+    }, 7000);
+    //
+*/
     //
     //
   }
@@ -220,7 +268,6 @@ export default class MainScene {
         Space.WORLD
       );
     }
-
     if (options?.rotateZ) {
       singlemesh.rotate(
         Vector3.Forward(),
@@ -229,4 +276,144 @@ export default class MainScene {
       );
     }
   }
+  //
+  makeBlur() {
+    let kernel = 1;
+
+    const postProcess0 = new BlurPostProcess(
+      "Horizontal_blur",
+      new Vector2(1.0, 0),
+      kernel,
+      1,
+      this.scene.activeCamera
+    );
+
+    const postProcess1 = new BlurPostProcess(
+      "Vertical_blur",
+      new Vector2(0, 1.0),
+      kernel,
+      1.0,
+      this.scene.activeCamera
+    );
+
+    const observer = this.scene.onBeforeRenderObservable.add(() => {
+      kernel += 0.5;
+      postProcess0.kernel = kernel;
+      postProcess1.kernel = kernel;
+      if (this.scene.imageProcessingConfiguration.exposure > 0.3) {
+        this.scene.imageProcessingConfiguration.exposure -= 0.01;
+      }
+      if (kernel >= 32) {
+        observer.remove();
+        this.blurEndCallback();
+      }
+    });
+
+    //
+  }
+  //
+  //
+  blurEndCallback() {
+    this.prepareCamera(this.meshPicked as Mesh);
+  }
+  //
+  removeBlur() {
+    if (this.scene.getPostProcessByName("Horizontal_blur")) {
+      this.scene.getPostProcessByName("Horizontal_blur")!.dispose();
+    }
+    if (this.scene.getPostProcessByName("Vertical_blur")) {
+      this.scene.getPostProcessByName("Vertical_blur")!.dispose();
+    }
+    this.scene.imageProcessingConfiguration.exposure = 0.8;
+    this.restoreCamera();
+    // this.roomPicker.setPickingList(this.pickArray);
+  }
+  //
+
+  prepareCamera(meshToZoom: Mesh) {
+    // Attach camera to canvas inputs
+    /*
+    const camera = this.scene.activeCamera!.clone(
+      "camClone"
+    ) as BABYLON.ArcRotateCamera;
+*/
+    this.scene.activeCamera!.detachControl();
+
+    this.scene.environmentIntensity = 0.9;
+
+    Tools.CreateScreenshotUsingRenderTarget(
+      this.engine,
+      this.scene.activeCamera!,
+      { precision: 1.0 },
+      (data) => {
+        document.body.style.backgroundImage = "url(" + data + ")";
+        document.body.style.backgroundRepeat = "no-repeat";
+        document.body.style.backgroundSize = "cover";
+
+        const camera = new ArcRotateCamera(
+          "camClone2",
+          -Math.PI,
+          1.1,
+          4,
+          Vector3.Zero()
+        );
+        camera.minZ = 0.1;
+
+        camera.layerMask = 0x20000000;
+
+        this.scene.clearColor = new Color4(0, 0, 0, 0);
+        this.scene.imageProcessingConfiguration.exposure = 0.8;
+
+        this.scene.activeCamera = camera;
+        camera.lowerRadiusLimit = 1.3;
+        camera.useBouncingBehavior = true;
+
+        camera.useAutoRotationBehavior = true;
+
+        camera.pinchPrecision = 200 / camera.radius;
+        camera.upperRadiusLimit = 5 * camera.radius;
+
+        camera.wheelDeltaPercentage = 0.01;
+        camera.pinchDeltaPercentage = 0.01;
+
+        this.scene.activeCamera!.attachControl();
+
+        camera.useFramingBehavior = true;
+        camera.framingBehavior!.framingTime = 800;
+
+        const instancedMesh = meshToZoom.clone(meshToZoom.name + "inst");
+        instancedMesh.layerMask = 0x20000000;
+        instancedMesh.position = Vector3.Zero();
+        instancedMesh.normalizeToUnitCube();
+
+        this.instaMesh = instancedMesh;
+
+        /*
+
+    // Enable camera's behaviors
+    camera.useFramingBehavior = true; 
+    framingBehavior.framingTime = 0;
+    framingBehavior.elevationReturnTime = -1;
+       */
+
+        camera.setTarget(instancedMesh);
+      }
+    );
+  }
+  //
+  restoreCamera() {
+    this.scene.environmentIntensity = 0.4;
+    this.scene.activeCamera!.detachControl();
+
+    this.scene.activeCamera = this.scene.getCameraByName("camera");
+    this.scene.activeCamera!.attachControl();
+    if (this.instaMesh !== undefined) {
+      this.instaMesh.dispose();
+    }
+    console.log(this.roomPicker);
+    document.getElementById("top")!.innerHTML = "";
+  }
+  //
+
+  //
 }
