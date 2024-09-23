@@ -174,4 +174,11 @@ export const singleMeshesList: Array<ISingleModels> = [
     position: new Vector3(-3.3, 0.47, 4.35),
     options: { rotateX: 0, rotateY: -90, rotateZ: 0 },
   },
+  {
+    url: "kit/scifi_novel-opt.glb",
+    name: "picnic",
+    scalingFactor: 2,
+    position: new Vector3(-0.4, 0.86, -2.5),
+    options: { rotateX: 0, rotateY: -20, rotateZ: 0 },
+  },
 ];

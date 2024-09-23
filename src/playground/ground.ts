@@ -47,10 +47,18 @@ export class Ground {
 
     plane2.rotation.y = 0;
     plane2.position.z = 5;
+    plane2.position.x = -5;
 
     const plane3 = plane1.createInstance("plane3");
 
     plane3.rotation.y = Math.PI;
     plane3.position.z = -5;
+    plane3.position.x = -5;
+
+    const plane4 = plane1.createInstance("plane4");
+
+    plane4.rotation.y = -Math.PI / 2;
+
+    plane4.position.x = -10;
   }
 }

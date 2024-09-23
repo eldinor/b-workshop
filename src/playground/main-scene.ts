@@ -18,6 +18,7 @@ import {
   BlurPostProcess,
   Vector2,
   Color4,
+  UniversalCamera,
 } from "@babylonjs/core/";
 import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import "@babylonjs/loaders";
@@ -195,6 +196,9 @@ export default class MainScene {
         });
     });
     //
+    // this._setFPSCamera();
+    //
+    //
 
     let gKeyCounter = 0;
     let rKeyCounter = 0;
@@ -222,12 +226,18 @@ export default class MainScene {
             console.log("isPickedGood ", this.isPickedGood);
             console.log(this.meshPicked.name);
             this.makeBlur();
+            document.getElementById("top")!.innerHTML =
+              this.meshPicked.name + "<br> Press R to close";
           }
         }
       }
     }); // end event
     //
+    this.scene.meshes.forEach((m) => {
+      m.checkCollisions = true;
+    });
 
+    (this.scene.activeCamera as ArcRotateCamera)!.checkCollisions = true;
     //
     /*
     //
@@ -415,5 +425,38 @@ export default class MainScene {
   }
   //
 
+  _setFPSCamera() {
+    const camera = new UniversalCamera(
+      "FirstViewCamera",
+      new Vector3(-4, 2, 0),
+      this.scene
+    );
+    camera.setTarget(Vector3.Zero());
+
+    camera.ellipsoid = new Vector3(0.35, 0.75, 0.35);
+    camera.speed = 0.3;
+
+    this.scene.collisionsEnabled = true;
+    this.scene.gravity.y = -0.08;
+
+    camera.checkCollisions = true;
+    camera.applyGravity = true;
+    //Controls  WASD
+    camera.keysUp.push(87);
+    camera.keysDown.push(83);
+    camera.keysRight.push(68);
+    camera.keysLeft.push(65);
+    camera.keysUpward.push(32);
+    camera.minZ = 0.1;
+
+    const canvas = this.scene.getEngine().getRenderingCanvas();
+    //  this.scene.activeCamera?.detachControl();
+    camera.attachControl(canvas, true);
+    this.scene.activeCamera = camera;
+
+    this.scene.meshes.forEach((m) => {
+      m.checkCollisions = true;
+    });
+  }
   //
 }
