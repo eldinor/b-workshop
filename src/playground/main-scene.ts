@@ -22,7 +22,7 @@ import {
 } from "@babylonjs/core/";
 import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import "@babylonjs/loaders";
-
+import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
 import { Ground } from "./ground";
 
 import {
@@ -51,6 +51,8 @@ export default class MainScene {
   }
 
   _setCamera(scene: Scene): void {
+    this.scene.clearColor = new Color4(0, 0, 0, 0);
+
     this.camera = new ArcRotateCamera(
       "camera",
       Tools.ToRadians(190),
@@ -238,6 +240,21 @@ export default class MainScene {
     });
 
     (this.scene.activeCamera as ArcRotateCamera)!.checkCollisions = true;
+    //
+    const htmlMeshRenderer = new HtmlMeshRenderer(this.scene);
+
+    // Shows how this can be used to include a website in your scene
+    const siteUrl = "https://babylonpress.org/";
+    //   const siteUrl = "https://traditionpress.ru/";
+    const htmlMeshSite = new HtmlMesh(this.scene, "html-mesh-site");
+    const iframeSite = document.createElement("iframe");
+    iframeSite.src = siteUrl;
+    iframeSite.width = "960px";
+    iframeSite.height = "540px";
+    htmlMeshSite.setContent(iframeSite, 1.92, 1.08);
+    htmlMeshSite.position.x = -7;
+    htmlMeshSite.position.y = 1.2;
+    htmlMeshSite.position.z = 4.98;
     //
     /*
     //

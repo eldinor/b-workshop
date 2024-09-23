@@ -125,6 +125,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.5,
     position: new Vector3(-0.25, 0, 1.5),
   },
+  /*
   {
     url: "kit/industrial_electrical_box02-_10mb-opt.glb",
     name: "electrical_box_big",
@@ -140,6 +141,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     position: new Vector3(-4.6, 1.9, -4.9),
     glow: true,
   },
+  */
   {
     url: "kit/old_leather_armchair-opt.glb",
     name: "leather_armchair",

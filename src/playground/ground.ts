@@ -1,5 +1,6 @@
-import * as BABYLON from "@babylonjs/core/Legacy/legacy";
+import { Scene, MeshBuilder } from "@babylonjs/core/";
 import "@babylonjs/loaders";
+
 import {
   checkerTiles,
   cobbleStone,
@@ -14,7 +15,7 @@ import {
 } from "./walls";
 
 export class Ground {
-  constructor(private scene: BABYLON.Scene) {
+  constructor(private scene: Scene) {
     this._createGround();
     this._createWalls();
   }
@@ -22,7 +23,7 @@ export class Ground {
   _createGround(): void {
     const { scene } = this;
 
-    const mesh = BABYLON.MeshBuilder.CreateGround(
+    const mesh = MeshBuilder.CreateGround(
       "ground",
       { width: 20, height: 20 },
       scene
@@ -33,7 +34,7 @@ export class Ground {
   }
 
   _createWalls() {
-    const plane1 = BABYLON.MeshBuilder.CreatePlane("plane1", {
+    const plane1 = MeshBuilder.CreatePlane("plane1", {
       width: 10,
       height: 10,
     });
