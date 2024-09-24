@@ -225,6 +225,7 @@ export default class MainScene {
 
     let OneKeyCounter = 0;
     let rKeyCounter = 0;
+    let TwoKeyCounter = 0;
     document.addEventListener("keyup", (event) => {
       const keyName = event.key;
       if (keyName === "1" || keyName === "!") {
@@ -255,6 +256,30 @@ export default class MainScene {
           }
         }
       }
+      if (keyName === "2" || keyName === "@") {
+        TwoKeyCounter++;
+        console.log("TwoKeyCounter", TwoKeyCounter);
+
+        moveCamera(
+          this.camera,
+          3.9,
+          1.06,
+          1.486,
+          new Vector3(-0.72, 0.87, -2.23),
+          240
+        );
+      }
+      //
+      if (keyName === "3" || keyName === "#") {
+        moveCamera(
+          this.camera,
+          1.33,
+          1.45,
+          4.1,
+          new Vector3(-3.09, 0.77, 0.67),
+          240
+        );
+      }
     }); // end event
     //
     this.scene.meshes.forEach((m) => {
@@ -262,18 +287,45 @@ export default class MainScene {
     });
 
     //
-
-    // moveCamera(this.camera);
-
-    function moveCamera(camera: ArcRotateCamera) {
+    /*
+    //  moveCamera(this.camera, 1.5, 1.2, 5, new Vector3(-3, 0.6, 0.7));
+    setTimeout(() => {
+      moveCamera(
+        this.camera,
+        3.9,
+        1.06,
+        1.486,
+        new Vector3(-0.72, 0.87, -2.23),
+        240
+      );
+    }, 1000);
+*/
+    function moveCamera(
+      camera: ArcRotateCamera,
+      alpha: number,
+      beta: number,
+      radius: number,
+      target: Vector3,
+      totalFrame: number
+    ) {
       Animation.CreateAndStartAnimation(
         "cam_alpha",
         camera,
         "alpha",
         60,
-        240,
+        totalFrame,
         camera.alpha,
-        1.5,
+        alpha,
+        Animation.ANIMATIONLOOPMODE_CONSTANT
+      );
+      Animation.CreateAndStartAnimation(
+        "cam_beta",
+        camera,
+        "beta",
+        60,
+        totalFrame,
+        camera.beta,
+        beta,
         Animation.ANIMATIONLOOPMODE_CONSTANT
       );
       Animation.CreateAndStartAnimation(
@@ -281,10 +333,10 @@ export default class MainScene {
         camera,
         "target",
         60,
-        240,
+        totalFrame,
         camera.target,
         //  this.scene.getMeshByName("military_radio")!.position,
-        new Vector3(-3, 0.6, 0.7),
+        target,
         Animation.ANIMATIONLOOPMODE_CONSTANT
       );
       Animation.CreateAndStartAnimation(
@@ -294,7 +346,7 @@ export default class MainScene {
         60,
         240,
         camera.radius,
-        5,
+        radius,
         Animation.ANIMATIONLOOPMODE_CONSTANT
       );
     }
@@ -599,8 +651,10 @@ export default class MainScene {
     document.getElementById("top")!.innerHTML = "";
 
     setTimeout(() => {
-      this.meshPicked.disableEdgesRendering();
-    }, 1000);
+      this.pickArray.forEach((m) => {
+        m.disableEdgesRendering();
+      });
+    }, 700);
   }
   //
 
