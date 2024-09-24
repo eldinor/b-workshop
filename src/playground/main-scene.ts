@@ -19,6 +19,8 @@ import {
   Vector2,
   Color4,
   UniversalCamera,
+  ReflectionProbe,
+  PBRMaterial,
 } from "@babylonjs/core/";
 import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import "@babylonjs/loaders";
@@ -36,7 +38,7 @@ export default class MainScene {
   private isPickedGood: boolean = false;
   private meshPicked: AbstractMesh;
   private roomPicker: GPUPicker;
-  private pickArray: Array<Mesh> = [];
+  public pickArray: Array<Mesh> = [];
   private instaMesh: InstancedMesh | Mesh;
 
   constructor(
@@ -66,6 +68,8 @@ export default class MainScene {
     //
     this.camera.minZ = 0.1;
     this.camera.wheelDeltaPercentage = 0.01;
+    //
+    //
   }
 
   _setLight(scene: Scene): void {
@@ -173,10 +177,14 @@ export default class MainScene {
       }
       this.pickArray.push(this.scene.getMeshByName(item.name) as Mesh);
     }
+
+    console.log(gl);
     //
     this.roomPicker = new GPUPicker();
     this.roomPicker.setPickingList(this.pickArray);
     console.log(this.roomPicker);
+    console.log(this.pickArray);
+    //
     //
 
     this.scene.onPointerObservable.add(() => {
@@ -185,7 +193,10 @@ export default class MainScene {
         .then((pickingInfo) => {
           if (pickingInfo) {
             console.log(pickingInfo.mesh.name);
-            if (this.scene.activeCamera!.name == "camera") {
+            if (
+              this.scene.activeCamera!.name == "camera" ||
+              this.scene.activeCamera!.name == "FirstViewCamera"
+            ) {
               this.isPickedGood = true;
               this.meshPicked = pickingInfo.mesh;
               top.innerHTML =
@@ -202,16 +213,19 @@ export default class MainScene {
     //
     //
 
-    let gKeyCounter = 0;
+    let OneKeyCounter = 0;
     let rKeyCounter = 0;
     document.addEventListener("keyup", (event) => {
       const keyName = event.key;
-      if (keyName === "g" || keyName === "G") {
-        gKeyCounter++;
-        if (gKeyCounter % 2 == 0) {
-          this.scene.debugLayer.hide();
+      if (keyName === "1" || keyName === "!") {
+        OneKeyCounter++;
+        if (OneKeyCounter % 2 == 0) {
+          this.scene.activeCamera!.detachControl();
+          this.scene.activeCamera = this.scene.getCameraByName("camera");
+          this.scene.activeCamera!.attachControl();
         } else {
-          this.scene.debugLayer.show();
+          this.scene.activeCamera!.detachControl();
+          this._setFPSCamera();
         }
       }
       if (keyName === "r" || keyName === "R") {
@@ -220,10 +234,8 @@ export default class MainScene {
           console.log("counter Reset");
           this.removeBlur();
           this.isPickedGood = false;
-          // this.restoreCamera();
         } else {
           console.log("START");
-          //   this.showMore();
           if (this.isPickedGood) {
             console.log("isPickedGood ", this.isPickedGood);
             console.log(this.meshPicked.name);
@@ -241,6 +253,8 @@ export default class MainScene {
 
     (this.scene.activeCamera as ArcRotateCamera)!.checkCollisions = true;
     //
+
+    /*
     const htmlMeshRenderer = new HtmlMeshRenderer(this.scene);
 
     // Shows how this can be used to include a website in your scene
@@ -255,6 +269,7 @@ export default class MainScene {
     htmlMeshSite.position.x = -7;
     htmlMeshSite.position.y = 1.2;
     htmlMeshSite.position.z = 4.98;
+    */
     //
     /*
     //
@@ -404,6 +419,15 @@ export default class MainScene {
         camera.pinchDeltaPercentage = 0.01;
 
         this.scene.activeCamera!.attachControl();
+        //
+
+        this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(
+          "workshop_pipeline",
+          camera
+        );
+
+        //
+        //
 
         camera.useFramingBehavior = true;
         camera.framingBehavior!.framingTime = 800;
@@ -450,7 +474,7 @@ export default class MainScene {
     );
     camera.setTarget(Vector3.Zero());
 
-    camera.ellipsoid = new Vector3(0.35, 0.75, 0.35);
+    camera.ellipsoid = new Vector3(0.5, 1, 0.5);
     camera.speed = 0.3;
 
     this.scene.collisionsEnabled = true;

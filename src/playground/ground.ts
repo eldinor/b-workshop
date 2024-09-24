@@ -60,6 +60,6 @@ export class Ground {
 
     plane4.rotation.y = -Math.PI / 2;
 
-    plane4.position.x = -10;
+    plane4.position.x = -7;
   }
 }

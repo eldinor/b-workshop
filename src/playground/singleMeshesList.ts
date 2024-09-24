@@ -146,7 +146,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     url: "kit/old_leather_armchair-opt.glb",
     name: "leather_armchair",
     scalingFactor: 0.01,
-    position: new Vector3(-1.4, 0, 4.25),
+    position: new Vector3(-2.4, 0, 4.25),
     options: { rotateY: 210 },
   },
   {
@@ -173,7 +173,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     url: "kit/wooden_table_4_opt.glb",
     name: "wooden_table_4",
     scalingFactor: 1,
-    position: new Vector3(-3.3, 0.47, 4.35),
+    position: new Vector3(-4.9, 0.47, 4.35),
     options: { rotateX: 0, rotateY: -90, rotateZ: 0 },
   },
   {
@@ -183,4 +183,63 @@ export const singleMeshesList: Array<ISingleModels> = [
     position: new Vector3(-0.4, 0.86, -2.5),
     options: { rotateX: 0, rotateY: -20, rotateZ: 0 },
   },
+  {
+    url: "kit/basic_ottoman-opt.glb",
+    name: "ottoman",
+    scalingFactor: 0.01,
+    position: new Vector3(-3, 0.47, -4),
+    options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
+  },
+  {
+    url: "kit/handmade_axe-opt.glb",
+    name: "handmade_axe",
+    scalingFactor: 0.002,
+    position: new Vector3(-0.4, 0.4, -3.6),
+    options: { rotateX: 0, rotateY: 215, rotateZ: 0 },
+  },
+  {
+    url: "kit/crowbar-opt.glb",
+    name: "crowbar",
+    scalingFactor: 1,
+    position: new Vector3(-0.3, 1.9, 4.3),
+    options: { rotateX: 90, rotateY: 40, rotateZ: 0 },
+  },
+  {
+    url: "kit/esky_cooler-opt.glb",
+    name: "cooler",
+    scalingFactor: 0.5,
+    position: new Vector3(-0.4, 0.5, -2.6),
+    options: { rotateX: 0, rotateY: 65, rotateZ: 0 },
+  },
+  {
+    url: "kit/old_chair_low-poly-opt.glb",
+    name: "old_chair_metal",
+    scalingFactor: 2,
+    position: new Vector3(-2.4, 0.5, -1.6),
+    options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
+  },
+  {
+    url: "kit/plastic_bucket-opt.glb",
+    name: "plastic_bucket",
+    scalingFactor: 1,
+    position: new Vector3(-0.3, 0.25, 2.5),
+    options: { rotateX: 0, rotateY: -120, rotateZ: 0 },
+  },
+  /*
+  {
+    url: "kit/yoga_mat-opt.glb",
+    name: "yoga_mat",
+    scalingFactor: 0.01,
+    position: new Vector3(-5, 0.6, -4.8),
+    options: { rotateX: 90, rotateY: 90, rotateZ: 0 },
+  },
+  
+  {
+    url: "kit/plastic_water_bottle-opt.glb",
+    name: "plastic_water_bottle",
+    scalingFactor: 0.01,
+    position: new Vector3(-2, 1.6, -2.4),
+    options: { rotateX: 90, rotateY: 90, rotateZ: 0 },
+  },
+  */
 ];
