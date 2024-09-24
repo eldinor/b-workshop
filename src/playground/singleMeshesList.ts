@@ -84,6 +84,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     position: new Vector3(-0.45, 0.85, -3.8),
     options: { rotateY: -70 },
     glow: true,
+    glowLevel: 2,
   },
   {
     url: "kit/first_aid_kit-opt.glb",
@@ -118,6 +119,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-0.5, 1.09, -5.6),
     glow: true,
+    glowLevel: 0.8,
   },
   {
     url: "kit/metal_garbage_bin-opt.glb",

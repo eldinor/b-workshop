@@ -1,4 +1,5 @@
 import {
+  Animation,
   ArcRotateCamera,
   Scene,
   Engine,
@@ -21,6 +22,10 @@ import {
   UniversalCamera,
   ReflectionProbe,
   PBRMaterial,
+  PointerDragBehavior,
+  ActionManager,
+  ExecuteCodeAction,
+  MeshBuilder,
 } from "@babylonjs/core/";
 import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import "@babylonjs/loaders";
@@ -174,6 +179,11 @@ export default class MainScene {
     for (const item of singleMeshesList) {
       if (item.glow) {
         gl.addIncludedOnlyMesh(this.scene.getMeshByName(item.name) as Mesh);
+        if (item.glowLevel) {
+          (
+            this.scene.getMeshByName(item.name)!.material as PBRMaterial
+          ).emissiveIntensity = item.glowLevel;
+        }
       }
       this.pickArray.push(this.scene.getMeshByName(item.name) as Mesh);
     }
@@ -251,9 +261,129 @@ export default class MainScene {
       m.checkCollisions = true;
     });
 
-    (this.scene.activeCamera as ArcRotateCamera)!.checkCollisions = true;
     //
 
+    // moveCamera(this.camera);
+
+    function moveCamera(camera: ArcRotateCamera) {
+      Animation.CreateAndStartAnimation(
+        "cam_alpha",
+        camera,
+        "alpha",
+        60,
+        240,
+        camera.alpha,
+        1.5,
+        Animation.ANIMATIONLOOPMODE_CONSTANT
+      );
+      Animation.CreateAndStartAnimation(
+        "cam_target",
+        camera,
+        "target",
+        60,
+        240,
+        camera.target,
+        //  this.scene.getMeshByName("military_radio")!.position,
+        new Vector3(-3, 0.6, 0.7),
+        Animation.ANIMATIONLOOPMODE_CONSTANT
+      );
+      Animation.CreateAndStartAnimation(
+        "cam_radius",
+        camera,
+        "radius",
+        60,
+        240,
+        camera.radius,
+        5,
+        Animation.ANIMATIONLOOPMODE_CONSTANT
+      );
+    }
+    // (this.scene.activeCamera as ArcRotateCamera)!.checkCollisions = true;
+    /*
+    animationCamera(-2, 1.5, this.camera, this.scene);
+
+    function animationCamera(alpha, beta, camera, scene) {
+      let framerate = 20;
+
+      let animateAlpha = new Animation(
+        "animAlpha",
+        "alpha",
+        framerate,
+        Animation.ANIMATIONTYPE_FLOAT,
+        Animation.ANIMATIONLOOPMODE_CONSTANT
+      );
+      let keyframeAlpha = [];
+      const a = { frame: 0, value: camera.alpha };
+      keyframeAlpha.push(a as never);
+      keyframeAlpha.push({ frame: 120, value: alpha } as never);
+      animateAlpha.setKeys(keyframeAlpha);
+
+      let animateBeta = new Animation(
+        "animateBeta",
+        "beta",
+        framerate,
+        Animation.ANIMATIONTYPE_FLOAT,
+        Animation.ANIMATIONLOOPMODE_CONSTANT
+      );
+      let keyframeBeta = [];
+      keyframeBeta.push({ frame: 0, value: camera.beta } as never);
+      keyframeBeta.push({ frame: 120, value: beta } as never);
+      animateBeta.setKeys(keyframeBeta);
+
+      camera.animations = [animateAlpha, animateBeta];
+      scene.beginAnimation(camera, 0, 20, false, 2);
+    }
+*/
+    //
+    /*
+    const onPointerMove = (_evt) => {
+      const pickInfo = this.scene.pick(
+        this.scene.pointerX,
+        this.scene.pointerY,
+        (mesh) => {
+          return mesh.name !== "picnic";
+        },
+        false,
+        this.camera
+      );
+
+      if (pickInfo.hit) {
+        if (this.scene.getMeshByName("picnic") !== null) {
+          console.log(pickInfo.pickedPoint);
+          const mmm = this.scene.getMeshByName("picnic");
+          mmm!.position = pickInfo.pickedPoint as any;
+        }
+      }
+    };
+*/
+    //
+    //
+    /*
+    const pointerDragBehavior = new PointerDragBehavior({});
+    pointerDragBehavior.useObjectOrientationForDragging = true;
+    pointerDragBehavior.onDragStartObservable.add((_event) => {
+      console.log("dragStart");
+    });
+
+    const actionManager = new ActionManager(this.scene);
+    actionManager.registerAction(
+      new ExecuteCodeAction(ActionManager.OnPickDownTrigger, (event) => {
+        event.meshUnderPointer!.removeBehavior(pointerDragBehavior);
+        event.meshUnderPointer!.addBehavior(pointerDragBehavior);
+      })
+    );
+
+    this.scene.getMeshByName("battery")!.actionManager = actionManager;
+    this.scene.getMeshByName("picnic")!.actionManager = actionManager;
+    this.scene.getMeshByName("himik")!.actionManager = actionManager;
+
+
+    // this.scene.getMeshByName("crowbar")!.actionManager = actionManager;
+    */
+    //
+
+    //
+    //
     /*
     const htmlMeshRenderer = new HtmlMeshRenderer(this.scene);
 
@@ -320,6 +450,10 @@ export default class MainScene {
   }
   //
   makeBlur() {
+    this.meshPicked.enableEdgesRendering();
+    this.meshPicked.edgesWidth = 1.0;
+    this.meshPicked.edgesColor = new Color4(0, 0.5, 1, 1);
+
     let kernel = 1;
 
     const postProcess0 = new BlurPostProcess(
@@ -377,7 +511,7 @@ export default class MainScene {
     /*
     const camera = this.scene.activeCamera!.clone(
       "camClone"
-    ) as BABYLON.ArcRotateCamera;
+    ) as ArcRotateCamera;
 */
     this.scene.activeCamera!.detachControl();
 
@@ -463,6 +597,10 @@ export default class MainScene {
     }
     console.log(this.roomPicker);
     document.getElementById("top")!.innerHTML = "";
+
+    setTimeout(() => {
+      this.meshPicked.disableEdgesRendering();
+    }, 1000);
   }
   //
 
