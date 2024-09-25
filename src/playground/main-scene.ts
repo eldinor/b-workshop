@@ -26,6 +26,9 @@ import {
   ActionManager,
   ExecuteCodeAction,
   MeshBuilder,
+  CubicEase,
+  EasingFunction,
+  loadAssetContainerAsync,
 } from "@babylonjs/core/";
 import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import "@babylonjs/loaders";
@@ -38,6 +41,8 @@ import {
   singleMeshesList,
 } from "./singleMeshesList";
 
+import { moveCamera } from "@/moveCamera";
+
 export default class MainScene {
   private camera: ArcRotateCamera;
   private isPickedGood: boolean = false;
@@ -45,6 +50,8 @@ export default class MainScene {
   private roomPicker: GPUPicker;
   public pickArray: Array<Mesh> = [];
   private instaMesh: InstancedMesh | Mesh;
+  private spotLightState: boolean;
+  private spotLightArray: Array<SpotLight> = [];
 
   constructor(
     private scene: Scene,
@@ -108,11 +115,16 @@ export default class MainScene {
     );
     spotlight.intensity = 70;
     spotlight.diffuse = new Color3(200 / 255, 200 / 255, 100 / 255);
+    this.spotLightArray.push(spotlight);
     //
     const spotlight2 = spotlight.clone("spotlight2") as SpotLight;
     spotlight2.position.z = 4;
     spotlight2.direction.x = -0.05;
     spotlight2.direction.z = -0.05;
+    //
+    this.spotLightArray.push(spotlight2);
+    //
+    this.spotLightState = true;
   }
 
   _setPipeLine(): void {
@@ -134,6 +146,17 @@ export default class MainScene {
   async loadComponents(): Promise<void> {
     // Load your files in order
     new Ground(this.scene);
+    //
+    //
+    const aniSwitch = await loadAnimatedSwitch(
+      "kit/switch1-opt.glb",
+      this.scene
+    );
+    //console.log(aniSwitch);
+    aniSwitch.meshes[1].name = "Light_Switch";
+    this.pickArray.push(aniSwitch.meshes[1] as Mesh);
+    aniSwitch.meshes[1].metadata = { animated: true, action: "switchLight" };
+    //
     //
     const res = await SceneLoader.ImportMeshAsync(
       "",
@@ -211,6 +234,9 @@ export default class MainScene {
               this.meshPicked = pickingInfo.mesh;
               top.innerHTML =
                 pickingInfo.mesh.name + "<br>Press R to view closer";
+              if (pickingInfo.mesh.metadata.action !== undefined) {
+                top.innerHTML += "<br>Press E to switch light";
+              }
             }
           } else {
             this.isPickedGood = false;
@@ -226,6 +252,7 @@ export default class MainScene {
     let OneKeyCounter = 0;
     let rKeyCounter = 0;
     let TwoKeyCounter = 0;
+    let eKeyCounter = 0;
     document.addEventListener("keyup", (event) => {
       const keyName = event.key;
       if (keyName === "1" || keyName === "!") {
@@ -266,7 +293,7 @@ export default class MainScene {
           1.06,
           1.486,
           new Vector3(-0.72, 0.87, -2.23),
-          240
+          120
         );
       }
       //
@@ -277,14 +304,62 @@ export default class MainScene {
           1.45,
           4.1,
           new Vector3(-3.09, 0.77, 0.67),
-          240
+          120
         );
       }
+      //
+      if (keyName === "e" || keyName === "E") {
+        eKeyCounter++;
+        console.log("eKeyCounter", eKeyCounter);
+        if (this.isPickedGood) {
+          if (this.meshPicked.name === "Light_Switch") {
+            if (this.spotLightState) {
+              //
+              this.scene
+                .getAnimationGroupByName("switchLight")!
+                .start(false, -1, 0, 60);
+              this.scene
+                .getAnimationGroupByName("switchLight")!
+                .onAnimationEndObservable.addOnce(() => {
+                  this.spotLightArray.forEach((item) => {
+                    item.intensity = 0.1;
+                  });
+                  this.spotLightState = false;
+                  (
+                    this.scene.getMeshByName("ceiling_lamp")!
+                      .material as PBRMaterial
+                  ).emissiveIntensity = 0;
+                });
+              //
+            } else {
+              this.scene
+                .getAnimationGroupByName("switchLight")!
+                .start(false, 1, 0, 60);
+
+              this.scene
+                .getAnimationGroupByName("switchLight")!
+                .onAnimationEndObservable.addOnce(() => {
+                  this.spotLightArray.forEach((item) => {
+                    item.intensity = 70;
+                  });
+                  this.spotLightState = true;
+                  (
+                    this.scene.getMeshByName("ceiling_lamp")!
+                      .material as PBRMaterial
+                  ).emissiveIntensity = 1;
+                });
+            }
+          }
+        }
+      }
+      //
     }); // end event
     //
     this.scene.meshes.forEach((m) => {
       m.checkCollisions = true;
     });
+    //   (this.scene.activeCamera as ArcRotateCamera)!.checkCollisions = true;
+    //
 
     //
     /*
@@ -300,92 +375,9 @@ export default class MainScene {
       );
     }, 1000);
 */
-    function moveCamera(
-      camera: ArcRotateCamera,
-      alpha: number,
-      beta: number,
-      radius: number,
-      target: Vector3,
-      totalFrame: number
-    ) {
-      Animation.CreateAndStartAnimation(
-        "cam_alpha",
-        camera,
-        "alpha",
-        60,
-        totalFrame,
-        camera.alpha,
-        alpha,
-        Animation.ANIMATIONLOOPMODE_CONSTANT
-      );
-      Animation.CreateAndStartAnimation(
-        "cam_beta",
-        camera,
-        "beta",
-        60,
-        totalFrame,
-        camera.beta,
-        beta,
-        Animation.ANIMATIONLOOPMODE_CONSTANT
-      );
-      Animation.CreateAndStartAnimation(
-        "cam_target",
-        camera,
-        "target",
-        60,
-        totalFrame,
-        camera.target,
-        //  this.scene.getMeshByName("military_radio")!.position,
-        target,
-        Animation.ANIMATIONLOOPMODE_CONSTANT
-      );
-      Animation.CreateAndStartAnimation(
-        "cam_radius",
-        camera,
-        "radius",
-        60,
-        240,
-        camera.radius,
-        radius,
-        Animation.ANIMATIONLOOPMODE_CONSTANT
-      );
-    }
-    // (this.scene.activeCamera as ArcRotateCamera)!.checkCollisions = true;
-    /*
-    animationCamera(-2, 1.5, this.camera, this.scene);
 
-    function animationCamera(alpha, beta, camera, scene) {
-      let framerate = 20;
+    //
 
-      let animateAlpha = new Animation(
-        "animAlpha",
-        "alpha",
-        framerate,
-        Animation.ANIMATIONTYPE_FLOAT,
-        Animation.ANIMATIONLOOPMODE_CONSTANT
-      );
-      let keyframeAlpha = [];
-      const a = { frame: 0, value: camera.alpha };
-      keyframeAlpha.push(a as never);
-      keyframeAlpha.push({ frame: 120, value: alpha } as never);
-      animateAlpha.setKeys(keyframeAlpha);
-
-      let animateBeta = new Animation(
-        "animateBeta",
-        "beta",
-        framerate,
-        Animation.ANIMATIONTYPE_FLOAT,
-        Animation.ANIMATIONLOOPMODE_CONSTANT
-      );
-      let keyframeBeta = [];
-      keyframeBeta.push({ frame: 0, value: camera.beta } as never);
-      keyframeBeta.push({ frame: 120, value: beta } as never);
-      animateBeta.setKeys(keyframeBeta);
-
-      camera.animations = [animateAlpha, animateBeta];
-      scene.beginAnimation(camera, 0, 20, false, 2);
-    }
-*/
     //
     /*
     const onPointerMove = (_evt) => {
@@ -502,10 +494,11 @@ export default class MainScene {
   }
   //
   makeBlur() {
-    this.meshPicked.enableEdgesRendering();
-    this.meshPicked.edgesWidth = 1.0;
-    this.meshPicked.edgesColor = new Color4(0, 0.5, 1, 1);
-
+    if (this.meshPicked.metadata.action !== "switchLight") {
+      this.meshPicked.enableEdgesRendering();
+      this.meshPicked.edgesWidth = 1.0;
+      this.meshPicked.edgesColor = new Color4(0, 0.8, 1, 1);
+    }
     let kernel = 1;
 
     const postProcess0 = new BlurPostProcess(
@@ -692,4 +685,28 @@ export default class MainScene {
     });
   }
   //
+}
+
+export async function loadAnimatedSwitch(url: string, scene: Scene) {
+  const res = await loadAssetContainerAsync(url, scene);
+  const root = res.meshes[0];
+  root.scaling.scaleInPlace(2);
+  root.position = new Vector3(-2, 1, -5);
+  // (res.meshes[1] as Mesh).bakeCurrentTransformIntoVertices();
+  console.log(res);
+  const ag = res.animationGroups[0];
+  ag.name = "switchLight";
+  ag.loopAnimation = false;
+  ag.goToFrame(60);
+  ag.pause();
+  res.addAllToScene();
+
+  setTimeout(() => {
+    ag.play();
+  }, 1000);
+  setTimeout(() => {
+    ag.start(false, 1, 0, 60);
+  }, 4000);
+
+  return res;
 }
