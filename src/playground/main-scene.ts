@@ -29,19 +29,21 @@ import {
   CubicEase,
   EasingFunction,
   loadAssetContainerAsync,
+  Sound,
 } from "@babylonjs/core/";
-import { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import "@babylonjs/loaders";
-import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
+// import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
 import { Ground } from "./ground";
 
 import {
-  ISingleModels,
   ISingleModelsOptions,
   singleMeshesList,
+  complexMeshesList,
 } from "./singleMeshesList";
 
 import { moveCamera } from "@/moveCamera";
+import { Node } from "@babylonjs/core/node";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -49,9 +51,14 @@ export default class MainScene {
   private meshPicked: AbstractMesh;
   private roomPicker: GPUPicker;
   public pickArray: Array<Mesh> = [];
-  private instaMesh: InstancedMesh | Mesh;
+  private instaMesh: Mesh | TransformNode;
   private spotLightState: boolean;
   private spotLightArray: Array<SpotLight> = [];
+  private radioSound: Sound;
+  private morseSound: Sound;
+  private radioSoundState: boolean = false;
+  private morseSoundState: boolean = false;
+  private lightSwitchSound: Sound;
 
   constructor(
     private scene: Scene,
@@ -59,6 +66,7 @@ export default class MainScene {
     private engine: Engine
   ) {
     this._setCamera(scene);
+    this._setAudio();
     this._setLight(scene);
     this.loadComponents();
     this._setPipeLine();
@@ -81,7 +89,76 @@ export default class MainScene {
     this.camera.minZ = 0.1;
     this.camera.wheelDeltaPercentage = 0.01;
     //
+
     //
+  }
+
+  _setAudio() {
+    console.log(Engine.audioEngine);
+
+    this.radioSound = new Sound(
+      "gunshot",
+      "sound/fromsponsors_plus.mp3",
+      this.scene,
+      () => {
+        // Sound has been downloaded & decoded
+
+        if (!Engine.audioEngine!.unlocked) {
+          Engine.audioEngine!.unlock();
+        }
+      },
+      {
+        spatialSound: true,
+        loop: true,
+        maxDistance: 11,
+        // distanceModel: "linea",
+        //  rolloffFactor: 0.5,
+      }
+    );
+    this.morseSound = new Sound(
+      "morse",
+      "sound/morse.mp3",
+      this.scene,
+      () => {
+        // Sound has been downloaded & decoded
+
+        if (!Engine.audioEngine!.unlocked) {
+          Engine.audioEngine!.unlock();
+        }
+      },
+      {
+        spatialSound: true,
+        loop: true,
+        maxDistance: 11,
+        //  distanceModel: "exponential",
+      }
+    );
+    //
+    this.lightSwitchSound = new Sound(
+      "lightSwitch",
+      "sound/218115__mastersdisaster__switch-on-livingroom.wav",
+      this.scene,
+      () => {
+        // Sound has been downloaded & decoded
+
+        if (!Engine.audioEngine!.unlocked) {
+          Engine.audioEngine!.unlock();
+        }
+      }
+    );
+    //
+
+    // Unlock audio on first user interaction.
+    window.addEventListener(
+      "click",
+      () => {
+        if (!Engine.audioEngine!.unlocked) {
+          Engine.audioEngine!.unlock();
+          console.log(Engine.audioEngine);
+        }
+      },
+      { once: true }
+    );
   }
 
   _setLight(scene: Scene): void {
@@ -123,6 +200,14 @@ export default class MainScene {
     spotlight2.direction.z = -0.05;
     //
     this.spotLightArray.push(spotlight2);
+
+    const spotlight3 = spotlight.clone("spotlight3") as SpotLight;
+    spotlight3.position.x = -8;
+    spotlight3.position.y = 2.5;
+    spotlight3.direction.x = -0.05;
+    spotlight3.direction.z = -0.05;
+    //
+    this.spotLightArray.push(spotlight2);
     //
     this.spotLightState = true;
   }
@@ -138,14 +223,21 @@ export default class MainScene {
     pipeline.samples = 4;
     // pipeline.imageProcessingEnabled = true
     this.scene.imageProcessingConfiguration.toneMappingEnabled = true;
-    this.scene.imageProcessingConfiguration.toneMappingType = 2;
+    this.scene.imageProcessingConfiguration.toneMappingType = 1;
+
+    this.scene.imageProcessingConfiguration.exposure = 0.9;
+
     //
-    pipeline.sharpenEnabled = true;
+    //  pipeline.sharpenEnabled = true;
   }
 
   async loadComponents(): Promise<void> {
     // Load your files in order
     new Ground(this.scene);
+    //
+
+    // Autoplay started!
+
     //
     //
     const aniSwitch = await loadAnimatedSwitch(
@@ -157,14 +249,34 @@ export default class MainScene {
     this.pickArray.push(aniSwitch.meshes[1] as Mesh);
     aniSwitch.meshes[1].metadata = { animated: true, action: "switchLight" };
     //
-    //
-    const res = await SceneLoader.ImportMeshAsync(
+    /*
+    const airconditioner = await SceneLoader.ImportMeshAsync(
       "",
-      "kit/old_work_bench-opt.glb"
+      "kit/industrial_air_conditioner-opt.glb"
     );
+    airconditioner.meshes[0].position = new Vector3(-0.1, 2, -2);
+    airconditioner.meshes[0].rotationQuaternion = null;
+    airconditioner.meshes[0].rotation.y = Math.PI / 2;
+    console.log(airconditioner.meshes);
+    airconditioner.meshes[2].name = "Air_Fan";
+    // airconditioner.meshes[2].metadata = { animated: true, action: "switchAir" };
+    this.pickArray.push(airconditioner.meshes[1] as Mesh);
+    this.pickArray.push(airconditioner.meshes[2] as Mesh);
 
-    res.meshes[0].scaling.scaleInPlace(1);
-    res.meshes[0].position.x = -0.4;
+    console.log(this.pickArray);
+    */
+    //
+    //
+    for (const item of complexMeshesList) {
+      await this.loadComplexModels(
+        item.url,
+        item.name,
+        item.scalingFactor,
+        item.position,
+        item.options,
+        item.pickableMeshname
+      );
+    }
     //
 
     for (const item of singleMeshesList) {
@@ -173,7 +285,8 @@ export default class MainScene {
         item.name,
         item.scalingFactor,
         item.position,
-        item.options
+        item.options,
+        item.metadata
       );
     }
 
@@ -211,6 +324,22 @@ export default class MainScene {
       this.pickArray.push(this.scene.getMeshByName(item.name) as Mesh);
     }
 
+    for (const item of complexMeshesList) {
+      if (item.glow) {
+        if (item.glowMeshName !== undefined) {
+          gl.addIncludedOnlyMesh(
+            this.scene.getMeshByName(item.glowMeshName) as Mesh
+          );
+          if (item.glowLevel !== undefined) {
+            (
+              this.scene.getMeshByName(item.glowMeshName)!
+                .material as PBRMaterial
+            ).emissiveIntensity = item.glowLevel;
+          }
+        }
+      }
+    }
+
     console.log(gl);
     //
     this.roomPicker = new GPUPicker();
@@ -219,6 +348,8 @@ export default class MainScene {
     console.log(this.pickArray);
     //
     //
+    const itemHeader = document.getElementById("itemHeader");
+    const itemAside = document.getElementById("itemAside");
 
     this.scene.onPointerObservable.add(() => {
       this.roomPicker
@@ -232,15 +363,42 @@ export default class MainScene {
             ) {
               this.isPickedGood = true;
               this.meshPicked = pickingInfo.mesh;
+              //
+              itemHeader!.innerHTML = pickingInfo.mesh.name;
+
+              //
+              //
+              document.getElementById("top_container")!.style.display =
+                "initial";
+              //
               top.innerHTML =
                 pickingInfo.mesh.name + "<br>Press R to view closer";
+              //  console.log(pickingInfo.mesh.metadata.action);
               if (pickingInfo.mesh.metadata.action !== undefined) {
-                top.innerHTML += "<br>Press E to switch light";
+                switch (pickingInfo.mesh.metadata.action) {
+                  case "switchLight":
+                    top.innerHTML += "<br>Press E to switch light";
+                    itemAside!.style.display = "initial";
+                    itemAside!.innerHTML = "Press E to switch light";
+                    break;
+                  case "Turn_Radio":
+                    top.innerHTML += "<br>Press E to switch radio";
+                    itemAside!.style.display = "initial";
+                    itemAside!.innerHTML = "Press E to switch radio";
+                    break;
+                  case "Turn_Morse":
+                    top.innerHTML += "<br>Press E to switch radio";
+                    itemAside!.style.display = "initial";
+                    itemAside!.innerHTML = "Press E to switch radio";
+                    break;
+                }
               }
             }
           } else {
             this.isPickedGood = false;
             top.innerHTML = "";
+            itemAside!.style.display = "none";
+            document.getElementById("top_container")!.style.display = "none";
           }
         });
     });
@@ -329,6 +487,7 @@ export default class MainScene {
                     this.scene.getMeshByName("ceiling_lamp")!
                       .material as PBRMaterial
                   ).emissiveIntensity = 0;
+                  this.lightSwitchSound.play();
                 });
               //
             } else {
@@ -347,7 +506,50 @@ export default class MainScene {
                     this.scene.getMeshByName("ceiling_lamp")!
                       .material as PBRMaterial
                   ).emissiveIntensity = 1;
+                  this.lightSwitchSound.play();
                 });
+            }
+          }
+          //
+          if (this.meshPicked.name === "old_radio") {
+            console.log("OLD");
+            //
+
+            if (!this.radioSoundState) {
+              (this.meshPicked.material as PBRMaterial).emissiveIntensity = 1;
+              this.radioSound.setPosition(this.meshPicked.position);
+              this.radioSound.play();
+              this.radioSoundState = true;
+            } else {
+              let gLevel = singleMeshesList.find((m) => m.name === "old_radio");
+              if (gLevel !== undefined) {
+                (this.meshPicked.material as PBRMaterial).emissiveIntensity =
+                  singleMeshesList.find((m) => m.name === "old_radio")
+                    ?.glowLevel as number;
+              }
+              this.radioSound.stop();
+              this.radioSoundState = false;
+            }
+          }
+          //
+          if (this.meshPicked.name === "military_radio") {
+            if (!this.morseSoundState) {
+              (this.meshPicked.material as PBRMaterial).emissiveIntensity = 2;
+              this.morseSound.setPosition(this.meshPicked.position);
+              this.morseSound.play();
+              this.morseSoundState = true;
+            } else {
+              let gLevel = singleMeshesList.find(
+                (m) => m.name === "military_radio"
+              );
+              if (gLevel !== undefined) {
+                (this.meshPicked.material as PBRMaterial).emissiveIntensity =
+                  singleMeshesList.find((m) => m.name === "military_radio")
+                    ?.glowLevel as number;
+              }
+
+              this.morseSound.stop();
+              this.morseSoundState = false;
             }
           }
         }
@@ -461,7 +663,8 @@ export default class MainScene {
     name: string,
     scalingFactor: number,
     position: Vector3,
-    options?: ISingleModelsOptions
+    options?: ISingleModelsOptions,
+    metadata?: {}
   ) {
     const res = await SceneLoader.ImportMeshAsync("", url);
     const singlemesh = res.meshes[1] as Mesh;
@@ -470,6 +673,9 @@ export default class MainScene {
     singlemesh.name = name;
     singlemesh.scaling.scaleInPlace(scalingFactor);
     singlemesh.position = position;
+    if (metadata !== undefined) {
+      singlemesh.metadata = metadata;
+    }
     if (options?.rotateX) {
       singlemesh.rotate(
         Vector3.Right(),
@@ -486,6 +692,47 @@ export default class MainScene {
     }
     if (options?.rotateZ) {
       singlemesh.rotate(
+        Vector3.Forward(),
+        Tools.ToRadians(options.rotateZ),
+        Space.WORLD
+      );
+    }
+  }
+  //
+  async loadComplexModels(
+    url: string,
+    name: string,
+    scalingFactor: number,
+    position: Vector3,
+    options?: ISingleModelsOptions,
+    pickableMeshname?: string
+  ) {
+    const res = await SceneLoader.ImportMeshAsync("", url);
+    const root = res.meshes[0];
+    root.name = name;
+    root.scaling.scaleInPlace(scalingFactor);
+    root.getChildMeshes().forEach((m) => {
+      m.isPickable = true;
+    });
+    root.position = position;
+    //
+    if (pickableMeshname !== undefined) {
+      const pickableMesh = res.meshes.find((m) => m.name === pickableMeshname);
+      this.pickArray.push(pickableMesh);
+    }
+    //
+    if (options?.rotateX) {
+      root.rotate(
+        Vector3.Right(),
+        Tools.ToRadians(options.rotateX),
+        Space.WORLD
+      );
+    }
+    if (options?.rotateY) {
+      root.rotate(Vector3.Up(), Tools.ToRadians(options.rotateY), Space.WORLD);
+    }
+    if (options?.rotateZ) {
+      root.rotate(
         Vector3.Forward(),
         Tools.ToRadians(options.rotateZ),
         Space.WORLD
@@ -560,8 +807,6 @@ export default class MainScene {
 */
     this.scene.activeCamera!.detachControl();
 
-    this.scene.environmentIntensity = 0.9;
-
     Tools.CreateScreenshotUsingRenderTarget(
       this.engine,
       this.scene.activeCamera!,
@@ -571,6 +816,7 @@ export default class MainScene {
         document.body.style.backgroundRepeat = "no-repeat";
         document.body.style.backgroundSize = "cover";
 
+        this.scene.environmentIntensity = 0.9;
         const camera = new ArcRotateCamera(
           "camClone2",
           -Math.PI,
@@ -583,7 +829,7 @@ export default class MainScene {
         camera.layerMask = 0x20000000;
 
         this.scene.clearColor = new Color4(0, 0, 0, 0);
-        this.scene.imageProcessingConfiguration.exposure = 0.8;
+        this.scene.imageProcessingConfiguration.exposure = 1;
 
         this.scene.activeCamera = camera;
         camera.lowerRadiusLimit = 1.3;
@@ -611,22 +857,33 @@ export default class MainScene {
         camera.useFramingBehavior = true;
         camera.framingBehavior!.framingTime = 800;
 
-        const instancedMesh = meshToZoom.clone(meshToZoom.name + "inst");
-        instancedMesh.layerMask = 0x20000000;
-        instancedMesh.position = Vector3.Zero();
-        instancedMesh.normalizeToUnitCube();
+        if (meshToZoom.parent == null) {
+          const instancedMesh = meshToZoom.clone(meshToZoom.name + "_inst");
+          instancedMesh.layerMask = 0x20000000;
+          instancedMesh.position = Vector3.Zero();
+          instancedMesh.normalizeToUnitCube();
 
-        this.instaMesh = instancedMesh;
+          this.instaMesh = instancedMesh;
 
-        /*
+          camera.setTarget(instancedMesh);
+        } else {
+          const root = meshToZoom.parent as Mesh;
+          console.log(root);
+          const instancedRoot = root.instantiateHierarchy(undefined, {
+            doNotInstantiate: true,
+          });
+          console.log(instancedRoot);
+          instancedRoot!.getChildMeshes().forEach((m) => {
+            m.layerMask = 0x20000000;
+            if (m.animations) {
+              console.log(m.name);
+            }
+          });
+          instancedRoot!.position = Vector3.Zero();
+          instancedRoot!.normalizeToUnitCube();
 
-    // Enable camera's behaviors
-    camera.useFramingBehavior = true; 
-    framingBehavior.framingTime = 0;
-    framingBehavior.elevationReturnTime = -1;
-       */
-
-        camera.setTarget(instancedMesh);
+          this.instaMesh = instancedRoot as Mesh;
+        }
       }
     );
   }
@@ -642,6 +899,8 @@ export default class MainScene {
     }
     console.log(this.roomPicker);
     document.getElementById("top")!.innerHTML = "";
+
+    this.scene.getCameraByName("camClone2")!.dispose();
 
     setTimeout(() => {
       this.pickArray.forEach((m) => {

@@ -1,4 +1,5 @@
-import { Scene, MeshBuilder } from "@babylonjs/core/";
+import { Scene, MeshBuilder, Tools } from "@babylonjs/core/";
+import { ToolBar } from "@babylonjs/inspector/components/actionTabs/tabs/propertyGrids/materials/textures/toolBar";
 import "@babylonjs/loaders";
 
 import {
@@ -30,6 +31,8 @@ export class Ground {
     );
     mesh.material = createMaterial("texture/", checkerTiles, "floor", 10);
     mesh.isPickable = false;
+    mesh.position.x -= 5;
+    mesh.position.z = 0.35;
     // new BABYLON.PhysicsAggregate(mesh, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene)
   }
 
@@ -60,6 +63,29 @@ export class Ground {
 
     plane4.rotation.y = -Math.PI / 2;
 
-    plane4.position.x = -7;
+    plane4.position.x = -10;
+
+    /*
+    const plane5 = plane1.createInstance("plane5");
+
+    plane5.rotation.y = -Math.PI / 2;
+
+    plane5.position.x = -8;
+    plane5.position.z = -7;
+
+    const plane6 = plane1.createInstance("plane6");
+
+    plane6.rotation.y = -Math.PI;
+
+    plane6.position.x = -13;
+    plane6.position.z = -2;
+
+    const plane7 = plane1.createInstance("plane7");
+
+    plane7.rotation.y = 0;
+
+    plane7.position.x = -13;
+    plane7.position.z = 2;
+    */
   }
 }

@@ -8,6 +8,7 @@ export interface ISingleModels {
   options?: ISingleModelsOptions;
   glow?: boolean;
   glowLevel?: number;
+  metadata?: { animated?: boolean; action?: string; sound?: boolean };
 }
 
 export interface ISingleModelsOptions {
@@ -120,6 +121,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     position: new Vector3(-0.5, 1.09, -5.6),
     glow: true,
     glowLevel: 0.8,
+    metadata: { action: "Turn_Morse" },
   },
   {
     url: "kit/metal_garbage_bin-opt.glb",
@@ -169,7 +171,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     url: "kit/battery_fallout-opt.glb",
     name: "battery",
     scalingFactor: 1,
-    position: new Vector3(-0.14, 1.89, 3.1),
+    position: new Vector3(-0.14, 1.89, 3.5),
   },
   {
     url: "kit/wooden_table_4_opt.glb",
@@ -227,6 +229,30 @@ export const singleMeshesList: Array<ISingleModels> = [
     position: new Vector3(-0.3, 0.25, 2.5),
     options: { rotateX: 0, rotateY: -120, rotateZ: 0 },
   },
+  {
+    url: "kit/old_radio-opt.glb",
+    name: "old_radio",
+    scalingFactor: 0.02,
+    position: new Vector3(-4.7, 1.16, 4),
+    options: { rotateX: 0, rotateY: 180, rotateZ: 0 },
+    glow: true,
+    glowLevel: 0.1,
+    metadata: { action: "Turn_Radio" },
+  },
+  {
+    url: "kit/soviet_kettle-opt.glb",
+    name: "old_kettle",
+    scalingFactor: 0.3,
+    position: new Vector3(-5.56, 0.95, 4.1),
+    options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
+  },
+  {
+    url: "kit/dish_with_ginkgo_leaves-opt.glb",
+    name: "Dish",
+    scalingFactor: 3,
+    position: new Vector3(-4.05, 0.4, 4.24),
+    options: { rotateX: -70, rotateY: 0, rotateZ: 0 },
+  },
   /*
   {
     url: "kit/yoga_mat-opt.glb",
@@ -244,4 +270,66 @@ export const singleMeshesList: Array<ISingleModels> = [
     options: { rotateX: 90, rotateY: 90, rotateZ: 0 },
   },
   */
+];
+
+export interface IComplexModels {
+  url: string;
+  name: string;
+  scalingFactor: number;
+  position: Vector3;
+  options?: ISingleModelsOptions;
+  glow?: boolean;
+  glowLevel?: number;
+  glowMeshName?: string;
+  pickableMeshname?: string;
+}
+
+export const complexMeshesList: Array<IComplexModels> = [
+  {
+    url: "kit/old_work_bench-opt.glb",
+    name: "old_work_bench",
+    scalingFactor: 1,
+    position: new Vector3(-0.4, 0, 0),
+  },
+
+  {
+    url: "kit/door-opt.glb",
+    name: "door_window",
+    scalingFactor: 0.01,
+    position: new Vector3(-10, 2.1, 0),
+    options: { rotateX: 0, rotateY: 90, rotateZ: 0 },
+  },
+
+  {
+    url: "kit/ava1.glb",
+    name: "ava1",
+    scalingFactor: 1,
+    position: new Vector3(-9.66, 0, -1.4),
+    options: { rotateX: 0, rotateY: 90, rotateZ: 0 },
+  },
+  {
+    url: "kit/industrial_wall_light-opt.glb",
+    name: "industrial_wall_light",
+    scalingFactor: 1,
+    position: new Vector3(-0.125, 2, -3),
+    options: { rotateX: 0, rotateY: -90, rotateZ: 0 },
+    glow: true,
+    glowLevel: 0.5,
+    glowMeshName: "Object_4",
+  },
+  {
+    url: "kit/gas_ballon_with_handtruck-opt.glb",
+    name: "gas_ballon_with_handtruck",
+    scalingFactor: 20,
+    position: new Vector3(-0.25, 0.05, 3.6),
+    options: { rotateX: 0, rotateY: 60, rotateZ: 0 },
+  },
+  {
+    url: "kit/rectangular_quartz_clock-opt.glb",
+    name: "quartz_clock",
+    scalingFactor: 2,
+    position: new Vector3(-0.14, 1.855, 3.2),
+    options: { rotateX: 0, rotateY: -20, rotateZ: 0 },
+    pickableMeshname: "AlarmArm_QuartzClock_0",
+  },
 ];
