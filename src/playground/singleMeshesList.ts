@@ -8,7 +8,12 @@ export interface ISingleModels {
   options?: ISingleModelsOptions;
   glow?: boolean;
   glowLevel?: number;
-  metadata?: { animated?: boolean; action?: string; sound?: boolean };
+  metadata?: {
+    animated?: boolean;
+    action?: string;
+    sound?: boolean;
+    longName?: string;
+  };
 }
 
 export interface ISingleModelsOptions {
@@ -24,18 +29,21 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-0.2, 0.2, 4.73),
     options: { rotateY: -90 },
+    metadata: { longName: "Green Lockers" },
   },
   {
     url: "kit/vintage_milk_can_-_01-opt.glb",
     name: "old_can",
     scalingFactor: 0.1,
     position: new Vector3(-0.64, 0, -4.71),
+    metadata: { longName: "Vintage Can" },
   },
   {
     url: "kit/simple_propane_tank_2-opt.glb",
     name: "propan_small",
     scalingFactor: 0.1,
     position: new Vector3(-0.3, 0.28, 3),
+    metadata: { longName: "Small Propane Tank" },
   },
   {
     url: "kit/broom_wood_-_5mb-opt.glb",
@@ -43,6 +51,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.007,
     position: new Vector3(-0.345, 0.25, 2),
     options: { rotateZ: -15 },
+    metadata: { longName: "Just a Broom" },
   },
   {
     url: "kit/lamp-opt.glb",
@@ -57,6 +66,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-1.19, 0, -2.84),
     options: { rotateY: 60 },
+    metadata: { longName: "Wooden Chair" },
   },
   {
     url: "kit/workbench-opt.glb",
@@ -64,12 +74,14 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-0.75, 0, -4),
     options: { rotateY: -90 },
+    metadata: { longName: "Empty Workbench" },
   },
   {
     url: "kit/trash_can-opt.glb",
     name: "trash_can",
     scalingFactor: 0.001,
     position: new Vector3(-0.2, 0.1, -1.55),
+    metadata: { longName: "Trash Can" },
   },
   {
     url: "kit/jerrycan-opt.glb",
@@ -77,6 +89,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-1.1, 0.25, -4.75),
     options: { rotateY: 120 },
+    metadata: { longName: "Jerrycan" },
   },
   {
     url: "kit/capsule-opt.glb",
@@ -86,6 +99,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     options: { rotateY: -70 },
     glow: true,
     glowLevel: 2,
+    metadata: { longName: "Quantum Capsule Charger" },
   },
   {
     url: "kit/first_aid_kit-opt.glb",
@@ -93,12 +107,14 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-0.2, 0.76, -4.65),
     options: { rotateY: -160 },
+    metadata: { longName: "First Aid Kit" },
   },
   {
     url: "kit/pipeshelf_opt.glb",
     name: "pipeshelf",
     scalingFactor: 0.1,
     position: new Vector3(-0.15, 1.7, 3.4),
+    metadata: { longName: "Pipe Shelf" },
   },
   {
     url: "kit/table-opt.glb",
@@ -106,6 +122,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-4.15, 0.5, -4.6),
     options: { rotateY: -90 },
+    metadata: { longName: "Small Worktable" },
   },
   {
     url: "kit/azot-opt.glb",
@@ -113,6 +130,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.2,
     position: new Vector3(-0.2, 1.075, 3.96),
     options: { rotateY: -115 },
+    metadata: { longName: "Azot Tank" },
   },
   {
     url: "kit/military_radio-v2-opt.glb",
@@ -121,13 +139,14 @@ export const singleMeshesList: Array<ISingleModels> = [
     position: new Vector3(-0.5, 1.09, -5.6),
     glow: true,
     glowLevel: 0.8,
-    metadata: { action: "Turn_Morse" },
+    metadata: { action: "Turn_Morse", longName: "Military Radio" },
   },
   {
     url: "kit/metal_garbage_bin-opt.glb",
     name: "metal_garbage_bin",
     scalingFactor: 0.5,
     position: new Vector3(-0.25, 0, 1.5),
+    metadata: { longName: "Metal Garbage Bin" },
   },
   /*
   {
@@ -152,6 +171,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.01,
     position: new Vector3(-2.4, 0, 4.25),
     options: { rotateY: 210 },
+    metadata: { longName: "Leather Armchair" },
   },
   {
     url: "kit/anomaly_detector-opt.glb",
@@ -159,6 +179,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.05,
     position: new Vector3(-0.45, 0.88, -3.4),
     options: { rotateY: 60 },
+    metadata: { longName: "Anomaly Detector" },
   },
   {
     url: "kit/himik-o-v1.glb",
@@ -166,12 +187,14 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.5,
     position: new Vector3(-0.37, 0.38, -0.45),
     options: { rotateX: 0, rotateY: 20, rotateZ: -90 },
+    metadata: { longName: "'Young Chemist' Set" },
   },
   {
     url: "kit/battery_fallout-opt.glb",
     name: "battery",
     scalingFactor: 1,
     position: new Vector3(-0.14, 1.89, 3.5),
+    metadata: { longName: "Nuclear Battery" },
   },
   {
     url: "kit/wooden_table_4_opt.glb",
@@ -179,6 +202,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-4.9, 0.47, 4.35),
     options: { rotateX: 0, rotateY: -90, rotateZ: 0 },
+    metadata: { longName: "Wooden Table" },
   },
   {
     url: "kit/scifi_novel-opt.glb",
@@ -186,13 +210,15 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 2,
     position: new Vector3(-0.4, 0.86, -2.5),
     options: { rotateX: 0, rotateY: -20, rotateZ: 0 },
+    metadata: { longName: "The Roadside Picnic" },
   },
   {
     url: "kit/basic_ottoman-opt.glb",
     name: "ottoman",
     scalingFactor: 0.01,
-    position: new Vector3(-3, 0.47, -4),
+    position: new Vector3(-3, 0.375, -4),
     options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
+    metadata: { longName: "Ottoman" },
   },
   {
     url: "kit/handmade_axe-opt.glb",
@@ -200,6 +226,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.002,
     position: new Vector3(-0.4, 0.4, -3.6),
     options: { rotateX: 0, rotateY: 215, rotateZ: 0 },
+    metadata: { longName: "Worn Axe" },
   },
   {
     url: "kit/crowbar-opt.glb",
@@ -207,6 +234,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-0.3, 1.9, 4.3),
     options: { rotateX: 90, rotateY: 40, rotateZ: 0 },
+    metadata: { longName: "The Crowbar" },
   },
   {
     url: "kit/esky_cooler-opt.glb",
@@ -214,6 +242,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.5,
     position: new Vector3(-0.4, 0.5, -2.6),
     options: { rotateX: 0, rotateY: 65, rotateZ: 0 },
+    metadata: { longName: "Cooler" },
   },
   {
     url: "kit/old_chair_low-poly-opt.glb",
@@ -221,6 +250,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 2,
     position: new Vector3(-2.4, 0.5, -1.6),
     options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
+    metadata: { longName: "Old Chair" },
   },
   {
     url: "kit/plastic_bucket-opt.glb",
@@ -228,6 +258,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-0.3, 0.25, 2.5),
     options: { rotateX: 0, rotateY: -120, rotateZ: 0 },
+    metadata: { longName: "Plastic Bucket" },
   },
   {
     url: "kit/old_radio-opt.glb",
@@ -237,7 +268,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     options: { rotateX: 0, rotateY: 180, rotateZ: 0 },
     glow: true,
     glowLevel: 0.1,
-    metadata: { action: "Turn_Radio" },
+    metadata: { action: "Turn_Radio", longName: "Old Radio" },
   },
   {
     url: "kit/soviet_kettle-opt.glb",
@@ -245,6 +276,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.3,
     position: new Vector3(-5.56, 0.95, 4.1),
     options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
+    metadata: { longName: "Old Kettle" },
   },
   {
     url: "kit/dish_with_ginkgo_leaves-opt.glb",
@@ -252,6 +284,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 3,
     position: new Vector3(-4.05, 0.4, 4.24),
     options: { rotateX: -70, rotateY: 0, rotateZ: 0 },
+    metadata: { longName: "Ancient Dish" },
   },
   /*
   {
@@ -282,6 +315,12 @@ export interface IComplexModels {
   glowLevel?: number;
   glowMeshName?: string;
   pickableMeshname?: string;
+  metadata?: {
+    animated?: boolean;
+    action?: string;
+    sound?: boolean;
+    longName?: string;
+  };
 }
 
 export const complexMeshesList: Array<IComplexModels> = [
@@ -290,6 +329,11 @@ export const complexMeshesList: Array<IComplexModels> = [
     name: "old_work_bench",
     scalingFactor: 1,
     position: new Vector3(-0.4, 0, 0),
+    glow: true,
+    glowLevel: 0.5,
+    glowMeshName: "Light_Fixture_Base_low_Mat_Light_Fixture_0",
+    pickableMeshname: "Workbench_Group_1_low_Mat_Workbench_0",
+    metadata: { longName: "Workbench with Tools" },
   },
 
   {
@@ -305,7 +349,9 @@ export const complexMeshesList: Array<IComplexModels> = [
     name: "ava1",
     scalingFactor: 1,
     position: new Vector3(-9.66, 0, -1.4),
-    options: { rotateX: 0, rotateY: 90, rotateZ: 0 },
+    options: { rotateX: 0, rotateY: 70, rotateZ: 0 },
+    pickableMeshname: "Wolf3D_Avatar",
+    metadata: { longName: "Avatar Mannequin" },
   },
   {
     url: "kit/industrial_wall_light-opt.glb",
@@ -316,6 +362,8 @@ export const complexMeshesList: Array<IComplexModels> = [
     glow: true,
     glowLevel: 0.5,
     glowMeshName: "Object_4",
+    pickableMeshname: "Object_4",
+    metadata: { longName: "Wall Light" },
   },
   {
     url: "kit/gas_ballon_with_handtruck-opt.glb",
@@ -323,6 +371,8 @@ export const complexMeshesList: Array<IComplexModels> = [
     scalingFactor: 20,
     position: new Vector3(-0.25, 0.05, 3.6),
     options: { rotateX: 0, rotateY: 60, rotateZ: 0 },
+    pickableMeshname: "Cube_excess_oxygenCylinder_0",
+    metadata: { longName: "Gas Ballon with Handtruck" },
   },
   {
     url: "kit/rectangular_quartz_clock-opt.glb",
@@ -331,5 +381,6 @@ export const complexMeshesList: Array<IComplexModels> = [
     position: new Vector3(-0.14, 1.855, 3.2),
     options: { rotateX: 0, rotateY: -20, rotateZ: 0 },
     pickableMeshname: "AlarmArm_QuartzClock_0",
+    metadata: { longName: "Quartz Clock" },
   },
 ];

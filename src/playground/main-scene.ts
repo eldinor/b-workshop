@@ -44,6 +44,8 @@ import {
 import { moveCamera } from "@/moveCamera";
 import { Node } from "@babylonjs/core/node";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { AdvancedDynamicTexture } from "@babylonjs/gui/2D";
+import * as BABYLON_GUI from "@babylonjs/gui";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -59,6 +61,7 @@ export default class MainScene {
   private radioSoundState: boolean = false;
   private morseSoundState: boolean = false;
   private lightSwitchSound: Sound;
+  private _fpsCameraActive: boolean;
 
   constructor(
     private scene: Scene,
@@ -74,7 +77,7 @@ export default class MainScene {
 
   _setCamera(scene: Scene): void {
     this.scene.clearColor = new Color4(0, 0, 0, 0);
-
+    document.body.style.backgroundImage = "img/cover1.png";
     this.camera = new ArcRotateCamera(
       "camera",
       Tools.ToRadians(190),
@@ -89,7 +92,8 @@ export default class MainScene {
     this.camera.minZ = 0.1;
     this.camera.wheelDeltaPercentage = 0.01;
     //
-
+    // this.engine.loadingScreen.displayLoadingUI();
+    // this.engine.loadingUIText = "Hello";
     //
   }
 
@@ -178,7 +182,7 @@ export default class MainScene {
     pointLight2.position.z = -1;
     //
     pointLight1.diffuse = new Color3(87 / 255, 167 / 255, 167 / 255);
-    pointLight2.diffuse = new Color3(200 / 255, 200 / 255, 90 / 255);
+    //  pointLight2.diffuse = new Color3(200 / 255, 200 / 255, 90 / 255);
     //
     const pointLight3 = pointLight1.clone("pointLight3") as SpotLight;
     pointLight3.position.z = -3;
@@ -207,7 +211,7 @@ export default class MainScene {
     spotlight3.direction.x = -0.05;
     spotlight3.direction.z = -0.05;
     //
-    this.spotLightArray.push(spotlight2);
+    this.spotLightArray.push(spotlight3);
     //
     this.spotLightState = true;
   }
@@ -228,15 +232,13 @@ export default class MainScene {
     this.scene.imageProcessingConfiguration.exposure = 0.9;
 
     //
-    //  pipeline.sharpenEnabled = true;
+    pipeline.sharpenEnabled = true;
   }
 
   async loadComponents(): Promise<void> {
     // Load your files in order
     new Ground(this.scene);
     //
-
-    // Autoplay started!
 
     //
     //
@@ -245,26 +247,16 @@ export default class MainScene {
       this.scene
     );
     //console.log(aniSwitch);
+    aniSwitch.meshes[0].name = "Light_Switch";
     aniSwitch.meshes[1].name = "Light_Switch";
     this.pickArray.push(aniSwitch.meshes[1] as Mesh);
-    aniSwitch.meshes[1].metadata = { animated: true, action: "switchLight" };
+    aniSwitch.meshes[1].metadata = {
+      animated: true,
+      action: "switchLight",
+      longName: "Light Switch",
+    };
     //
-    /*
-    const airconditioner = await SceneLoader.ImportMeshAsync(
-      "",
-      "kit/industrial_air_conditioner-opt.glb"
-    );
-    airconditioner.meshes[0].position = new Vector3(-0.1, 2, -2);
-    airconditioner.meshes[0].rotationQuaternion = null;
-    airconditioner.meshes[0].rotation.y = Math.PI / 2;
-    console.log(airconditioner.meshes);
-    airconditioner.meshes[2].name = "Air_Fan";
-    // airconditioner.meshes[2].metadata = { animated: true, action: "switchAir" };
-    this.pickArray.push(airconditioner.meshes[1] as Mesh);
-    this.pickArray.push(airconditioner.meshes[2] as Mesh);
 
-    console.log(this.pickArray);
-    */
     //
     //
     for (const item of complexMeshesList) {
@@ -274,7 +266,8 @@ export default class MainScene {
         item.scalingFactor,
         item.position,
         item.options,
-        item.pickableMeshname
+        item.pickableMeshname,
+        item.metadata
       );
     }
     //
@@ -307,6 +300,7 @@ export default class MainScene {
     top.style.color = "yellow";
     top.innerHTML = "Press R to view closer";
     document.body.appendChild(top);
+    top.style.display = "none";
     //
 
     //
@@ -350,7 +344,7 @@ export default class MainScene {
     //
     const itemHeader = document.getElementById("itemHeader");
     const itemAside = document.getElementById("itemAside");
-
+    const itemImage = document.getElementById("itemImage") as HTMLImageElement;
     this.scene.onPointerObservable.add(() => {
       this.roomPicker
         .pickAsync(this.scene.pointerX, this.scene.pointerY)
@@ -364,9 +358,40 @@ export default class MainScene {
               this.isPickedGood = true;
               this.meshPicked = pickingInfo.mesh;
               //
-              itemHeader!.innerHTML = pickingInfo.mesh.name;
+              if (pickingInfo.mesh.metadata.longName !== undefined) {
+                itemHeader!.innerHTML = pickingInfo.mesh.metadata.longName;
+              } else {
+                itemHeader!.innerHTML = pickingInfo.mesh.name;
+              }
 
+              let imgSrc = "img/" + pickingInfo.mesh.name + ".png";
+              if (pickingInfo.mesh.parent) {
+                imgSrc = "img/" + pickingInfo.mesh.parent.name + ".png";
+                if (pickingInfo.mesh.parent!.parent !== null) {
+                  console.log("MANY PARENTS");
+                  imgSrc =
+                    "img/" + pickingInfo.mesh.parent.parent.name + ".png";
+                }
+              }
+
+              const imgOK = imageExists(imgSrc);
+
+              imgOK.then((res) => {
+                console.log(res);
+                if (res) {
+                  // itemImage.style.visibility = "initial";
+                  itemImage!.src = imgSrc;
+                } else {
+                  itemImage!.src = "img/no-photo.png";
+                  // itemImage.style.visibility = "hidden";
+                }
+              });
+
+              /*
+              itemImage!.src =
+                "https://babylonpress.org/wp-content/uploads/2020/12/logo-babylonpress-GB-s.png";
               //
+*/
               //
               document.getElementById("top_container")!.style.display =
                 "initial";
@@ -417,8 +442,11 @@ export default class MainScene {
         OneKeyCounter++;
         if (OneKeyCounter % 2 == 0) {
           this.scene.activeCamera!.detachControl();
+          //
+
           this.scene.activeCamera = this.scene.getCameraByName("camera");
-          this.scene.activeCamera!.attachControl();
+          this._fpsCameraActive = false;
+          this.scene.activeCamera!.attachControl(this.canvas);
         } else {
           this.scene.activeCamera!.detachControl();
           this._setFPSCamera();
@@ -560,101 +588,17 @@ export default class MainScene {
     this.scene.meshes.forEach((m) => {
       m.checkCollisions = true;
     });
-    //   (this.scene.activeCamera as ArcRotateCamera)!.checkCollisions = true;
     //
+    const loadingScreen = document.getElementById("loading-screen");
 
+    loadingScreen!.classList.add("fade-out");
+    loadingScreen!.addEventListener("transitionend", onTransitionEnd);
     //
-    /*
-    //  moveCamera(this.camera, 1.5, 1.2, 5, new Vector3(-3, 0.6, 0.7));
-    setTimeout(() => {
-      moveCamera(
-        this.camera,
-        3.9,
-        1.06,
-        1.486,
-        new Vector3(-0.72, 0.87, -2.23),
-        240
-      );
-    }, 1000);
-*/
+    // this.engine.loadingScreen.hideLoadingUI();
 
-    //
-
-    //
-    /*
-    const onPointerMove = (_evt) => {
-      const pickInfo = this.scene.pick(
-        this.scene.pointerX,
-        this.scene.pointerY,
-        (mesh) => {
-          return mesh.name !== "picnic";
-        },
-        false,
-        this.camera
-      );
-
-      if (pickInfo.hit) {
-        if (this.scene.getMeshByName("picnic") !== null) {
-          console.log(pickInfo.pickedPoint);
-          const mmm = this.scene.getMeshByName("picnic");
-          mmm!.position = pickInfo.pickedPoint as any;
-        }
-      }
-    };
-*/
-    //
-    //
-    /*
-    const pointerDragBehavior = new PointerDragBehavior({});
-    pointerDragBehavior.useObjectOrientationForDragging = true;
-    pointerDragBehavior.onDragStartObservable.add((_event) => {
-      console.log("dragStart");
-    });
-
-    const actionManager = new ActionManager(this.scene);
-    actionManager.registerAction(
-      new ExecuteCodeAction(ActionManager.OnPickDownTrigger, (event) => {
-        event.meshUnderPointer!.removeBehavior(pointerDragBehavior);
-        event.meshUnderPointer!.addBehavior(pointerDragBehavior);
-      })
-    );
-
-    this.scene.getMeshByName("battery")!.actionManager = actionManager;
-    this.scene.getMeshByName("picnic")!.actionManager = actionManager;
-    this.scene.getMeshByName("himik")!.actionManager = actionManager;
-
-
-    // this.scene.getMeshByName("crowbar")!.actionManager = actionManager;
-    */
-    //
-
-    //
-    //
-    /*
-    const htmlMeshRenderer = new HtmlMeshRenderer(this.scene);
-
-    // Shows how this can be used to include a website in your scene
-    const siteUrl = "https://babylonpress.org/";
-    //   const siteUrl = "https://traditionpress.ru/";
-    const htmlMeshSite = new HtmlMesh(this.scene, "html-mesh-site");
-    const iframeSite = document.createElement("iframe");
-    iframeSite.src = siteUrl;
-    iframeSite.width = "960px";
-    iframeSite.height = "540px";
-    htmlMeshSite.setContent(iframeSite, 1.92, 1.08);
-    htmlMeshSite.position.x = -7;
-    htmlMeshSite.position.y = 1.2;
-    htmlMeshSite.position.z = 4.98;
-    */
-    //
-    /*
-    //
-    setTimeout(() => {
-      this.removeBlur();
-    }, 7000);
-    //
-*/
-    //
+    function onTransitionEnd(event) {
+      event.target.remove();
+    }
     //
   }
 
@@ -705,7 +649,13 @@ export default class MainScene {
     scalingFactor: number,
     position: Vector3,
     options?: ISingleModelsOptions,
-    pickableMeshname?: string
+    pickableMeshname?: string | Array<string>,
+    metadata?: {
+      animated?: boolean;
+      action?: string;
+      sound?: boolean;
+      longName?: string;
+    }
   ) {
     const res = await SceneLoader.ImportMeshAsync("", url);
     const root = res.meshes[0];
@@ -713,12 +663,14 @@ export default class MainScene {
     root.scaling.scaleInPlace(scalingFactor);
     root.getChildMeshes().forEach((m) => {
       m.isPickable = true;
+      m.metadata = metadata;
     });
     root.position = position;
     //
     if (pickableMeshname !== undefined) {
       const pickableMesh = res.meshes.find((m) => m.name === pickableMeshname);
-      this.pickArray.push(pickableMesh);
+
+      this.pickArray.push(pickableMesh as Mesh);
     }
     //
     if (options?.rotateX) {
@@ -856,8 +808,18 @@ export default class MainScene {
 
         camera.useFramingBehavior = true;
         camera.framingBehavior!.framingTime = 800;
-
-        if (meshToZoom.parent == null) {
+        /*
+        camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
+          () => {
+            Tools.CreateScreenshotUsingRenderTarget(
+              this.engine,
+              this.scene.activeCamera!,
+              { precision: 0.5 }
+            );
+          }
+        );
+*/
+        if (!meshToZoom.parent) {
           const instancedMesh = meshToZoom.clone(meshToZoom.name + "_inst");
           instancedMesh.layerMask = 0x20000000;
           instancedMesh.position = Vector3.Zero();
@@ -876,13 +838,34 @@ export default class MainScene {
           instancedRoot!.getChildMeshes().forEach((m) => {
             m.layerMask = 0x20000000;
             if (m.animations) {
+              //
               console.log(m.name);
             }
           });
-          instancedRoot!.position = Vector3.Zero();
+          instancedRoot!.position = new Vector3(0, 0, 0);
           instancedRoot!.normalizeToUnitCube();
 
           this.instaMesh = instancedRoot as Mesh;
+
+          //   camera.framingBehavior!.autoCorrectCameraLimitsAndSensibility = true;
+          //    camera.framingBehavior!.positionScale = 1;
+
+          camera.framingBehavior!.zoomOnMeshHierarchy(
+            instancedRoot as Mesh,
+            undefined,
+            () => {
+              /*
+              Tools.CreateScreenshotUsingRenderTarget(
+                this.engine,
+                this.scene.activeCamera!,
+                { precision: 0.5 }
+              );
+              */
+            }
+          );
+
+          //    camera.setTarget(instancedRoot as Mesh);
+          //   console.log(camera.framingBehavior!.positionScale);
         }
       }
     );
@@ -892,7 +875,12 @@ export default class MainScene {
     this.scene.environmentIntensity = 0.4;
     this.scene.activeCamera!.detachControl();
 
-    this.scene.activeCamera = this.scene.getCameraByName("camera");
+    if (this._fpsCameraActive) {
+      this.scene.activeCamera = this.scene.getCameraByName("FirstViewCamera");
+    } else {
+      this.scene.activeCamera = this.scene.getCameraByName("camera");
+    }
+
     this.scene.activeCamera!.attachControl();
     if (this.instaMesh !== undefined) {
       this.instaMesh.dispose();
@@ -911,12 +899,19 @@ export default class MainScene {
   //
 
   _setFPSCamera() {
-    const camera = new UniversalCamera(
-      "FirstViewCamera",
-      new Vector3(-4, 2, 0),
-      this.scene
-    );
-    camera.setTarget(Vector3.Zero());
+    let camera;
+    if (!this.scene.getCameraByName("FirstViewCamera")) {
+      camera = new UniversalCamera(
+        "FirstViewCamera",
+        new Vector3(-4, 2, 0),
+        this.scene
+      );
+      camera.setTarget(Vector3.Zero());
+    } else {
+      camera = this.scene.getCameraByName("FirstViewCamera");
+    }
+
+    this._fpsCameraActive = true;
 
     camera.ellipsoid = new Vector3(0.5, 1, 0.5);
     camera.speed = 0.3;
@@ -936,12 +931,24 @@ export default class MainScene {
 
     const canvas = this.scene.getEngine().getRenderingCanvas();
     //  this.scene.activeCamera?.detachControl();
+    // this.engine.enterPointerlock();
     camera.attachControl(canvas, true);
     this.scene.activeCamera = camera;
 
     this.scene.meshes.forEach((m) => {
       m.checkCollisions = true;
     });
+
+    //
+    /*
+    const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    const pointerImage = new BABYLON_GUI.Image("pointer", "img/dot.png");
+    pointerImage.width = "10px";
+    pointerImage.height = "10px";
+    pointerImage.isVisible = true;
+    advancedTexture.addControl(pointerImage);
+    */
   }
   //
 }
@@ -968,4 +975,16 @@ export async function loadAnimatedSwitch(url: string, scene: Scene) {
   }, 4000);
 
   return res;
+}
+
+export async function imageExists(imgUrl: string) {
+  if (!imgUrl) {
+    return false;
+  }
+  return new Promise((res) => {
+    const image = new Image();
+    image.onload = () => res(true);
+    image.onerror = () => res(false);
+    image.src = imgUrl;
+  });
 }
