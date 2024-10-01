@@ -30,6 +30,8 @@ import {
   EasingFunction,
   loadAssetContainerAsync,
   Sound,
+  Texture,
+  NodeMaterial,
 } from "@babylonjs/core/";
 import "@babylonjs/loaders";
 // import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
@@ -46,6 +48,21 @@ import { Node } from "@babylonjs/core/node";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D";
 import * as BABYLON_GUI from "@babylonjs/gui";
+import {
+  brownCement,
+  checkerTiles,
+  cobbleStone,
+  createMaterial,
+  darkConcrete,
+  diamondMetal,
+  exposedBrick,
+  greyWood,
+  oldStone,
+  oldStone2,
+  oldTiles,
+  whiteLeather,
+} from "./walls";
+import { TextureCanvasComponent } from "@babylonjs/inspector/components/actionTabs/tabs/propertyGrids/materials/textures/textureCanvasComponent";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -160,6 +177,8 @@ export default class MainScene {
           Engine.audioEngine!.unlock();
           console.log(Engine.audioEngine);
         }
+
+        document.getElementById("info")!.style.display = "none";
       },
       { once: true }
     );
@@ -232,7 +251,7 @@ export default class MainScene {
     this.scene.imageProcessingConfiguration.exposure = 0.9;
 
     //
-    pipeline.sharpenEnabled = true;
+    //  pipeline.sharpenEnabled = true;
   }
 
   async loadComponents(): Promise<void> {
@@ -271,7 +290,11 @@ export default class MainScene {
       );
     }
     //
-
+    console.log("Complex loaded");
+    document.getElementById("info")!.innerHTML =
+      "Big models loaded, continue...";
+    //
+    //
     for (const item of singleMeshesList) {
       await this.loadModels(
         item.url,
@@ -283,6 +306,9 @@ export default class MainScene {
       );
     }
 
+    console.log("Single loaded");
+    document.getElementById("info")!.innerHTML = "Small models loaded";
+    //
     this.scene.materials.forEach((m: any) => {
       m.maxSimultaneousLights = 8;
     });
@@ -436,6 +462,8 @@ export default class MainScene {
     let rKeyCounter = 0;
     let TwoKeyCounter = 0;
     let eKeyCounter = 0;
+    let tKeyCounter = 0;
+    let yKeyCounter = 0;
     document.addEventListener("keyup", (event) => {
       const keyName = event.key;
       if (keyName === "1" || keyName === "!") {
@@ -583,11 +611,44 @@ export default class MainScene {
         }
       }
       //
+      if (keyName === "t" || keyName === "T") {
+        tKeyCounter++;
+        if (tKeyCounter % 2 == 0) {
+          const mat = this.scene.getMaterialByName("wall") as PBRMaterial;
+          changeTex(mat, exposedBrick);
+        } else {
+          const mat = this.scene.getMaterialByName("wall") as PBRMaterial;
+          changeTex(mat, greyWood);
+        }
+      }
+      //
+      if (keyName === "y" || keyName === "Y") {
+        yKeyCounter++;
+        if (yKeyCounter % 2 == 0) {
+          const mat = this.scene.getMaterialByName("floor") as PBRMaterial;
+          changeTex(mat, checkerTiles, 10);
+        } else {
+          const mat = this.scene.getMaterialByName("floor") as PBRMaterial;
+          changeTex(mat, oldTiles, 5);
+        }
+      }
+      //
     }); // end event
     //
     this.scene.meshes.forEach((m) => {
       m.checkCollisions = true;
     });
+    //
+    //
+    setTimeout(() => {
+      document.getElementById("info")!.innerHTML =
+        "Everything should be loaded";
+    }, 200);
+    setTimeout(() => {
+      document.getElementById("info")!.style.top = "50%";
+      document.getElementById("info")!.innerHTML =
+        "Left Click to Start <br><small>Drag - right button (CHECK NOW)</small><br><small>1, 2, 3 change camera modes (WIP)<br><h6>Don't press T or Y</h6></small>";
+    }, 500);
     //
     const loadingScreen = document.getElementById("loading-screen");
 
@@ -599,6 +660,9 @@ export default class MainScene {
     function onTransitionEnd(event) {
       event.target.remove();
     }
+    //
+
+    //
     //
   }
 
@@ -987,4 +1051,21 @@ export async function imageExists(imgUrl: string) {
     image.onerror = () => res(false);
     image.src = imgUrl;
   });
+}
+
+export function changeTex(mat, data, tiles?) {
+  (mat.albedoTexture as Texture).updateURL(
+    "texture/" + data.folder + data.albedo
+  );
+  (mat.bumpTexture as Texture).updateURL("texture/" + data.folder + data.bump);
+  (mat.metallicTexture as Texture).updateURL(
+    "texture/" + data.folder + data.metallic
+  );
+  (mat.ambientTexture as Texture).updateURL("texture/" + data.folder + data.ao);
+  if (tiles !== undefined) {
+    mat.textures.forEach((t) => {
+      t.vScale = tiles;
+      t.uScale = tiles;
+    });
+  }
 }
