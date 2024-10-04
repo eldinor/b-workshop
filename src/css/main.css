@@ -119,7 +119,7 @@ font-size: 1.4rem;
   top: 0px;
   left: 10px;
   background-color: rgba(216, 207, 211, 0.2);
-  z-index: 9999;
+  z-index: 2147483647;
   display: none;
   pointer-events: none;
 }

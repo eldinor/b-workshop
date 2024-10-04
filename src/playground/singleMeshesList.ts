@@ -286,7 +286,58 @@ export const singleMeshesList: Array<ISingleModels> = [
     options: { rotateX: -70, rotateY: 0, rotateZ: 0 },
     metadata: { longName: "Ancient Dish" },
   },
+  {
+    url: "kit/raillight-opt.glb",
+    name: "raillight",
+    scalingFactor: 1,
+    position: new Vector3(-1.6, 0, -4.7),
+    options: { rotateX: 0, rotateY: -50, rotateZ: 0 },
+    metadata: { longName: "Rail Light" },
+  },
+  {
+    url: "kit/writebook_opt.glb",
+    name: "writebook",
+    scalingFactor: 0.02,
+    position: new Vector3(-2.349, 0.591, -1.7),
+    options: { rotateX: 0, rotateY: -50, rotateZ: 0 },
+    metadata: { longName: "Old Notebook" },
+  },
+  {
+    url: "kit/fridge.glb",
+    name: "fridge",
+    scalingFactor: 1,
+    position: new Vector3(-9.59, 0.075, -4.55),
+    options: { rotateX: 0, rotateY: 180, rotateZ: 0 },
+    metadata: { longName: "Fridge" },
+  },
+  {
+    url: "kit/retro_coca-cola_fridge-opt.glb",
+    name: "coca-cola_fridge",
+    scalingFactor: 1,
+    position: new Vector3(-9.7, 0, -3.5),
+    options: { rotateX: 0, rotateY: 90, rotateZ: 0 },
+    metadata: { longName: "Retro Fridge" },
+  },
+  {
+    url: "kit/fridge_atomic_heart-opt.glb",
+    name: "atomic_fridge",
+    scalingFactor: 0.75,
+    position: new Vector3(-9.7, 1, -2.2),
+    options: { rotateX: 0, rotateY: 180, rotateZ: 0 },
+    metadata: { longName: "Atomic Heart Fridge" },
+    glow: true,
+    glowLevel: 1.5,
+  },
   /*
+  {
+    url: "kit/floor_carpet-opt.glb",
+    name: "floor_carpet",
+    scalingFactor: 0.1,
+    position: new Vector3(-2.6, 0, -2.7),
+    options: { rotateX: 0, rotateY: -50, rotateZ: 0 },
+    metadata: { longName: "Floor Carpet" },
+  },
+
   {
     url: "kit/yoga_mat-opt.glb",
     name: "yoga_mat",
@@ -320,6 +371,7 @@ export interface IComplexModels {
     action?: string;
     sound?: boolean;
     longName?: string;
+    mayBeImproved?: boolean;
   };
 }
 
@@ -348,10 +400,10 @@ export const complexMeshesList: Array<IComplexModels> = [
     url: "kit/ava1.glb",
     name: "ava1",
     scalingFactor: 1,
-    position: new Vector3(-9.66, 0, -1.4),
+    position: new Vector3(-9.66, 0, -1.3),
     options: { rotateX: 0, rotateY: 70, rotateZ: 0 },
     pickableMeshname: "Wolf3D_Avatar",
-    metadata: { longName: "Avatar Mannequin" },
+    metadata: { longName: "Avatar Mannequin", mayBeImproved: true },
   },
   {
     url: "kit/industrial_wall_light-opt.glb",

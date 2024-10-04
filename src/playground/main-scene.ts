@@ -32,6 +32,10 @@ import {
   Sound,
   Texture,
   NodeMaterial,
+  Camera,
+  AnimationGroup,
+  AssetContainer,
+  SSRRenderingPipeline,
 } from "@babylonjs/core/";
 import "@babylonjs/loaders";
 // import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
@@ -42,6 +46,7 @@ import {
   singleMeshesList,
   complexMeshesList,
 } from "./singleMeshesList";
+import { WORKSHOP } from "./workshop";
 
 import { moveCamera } from "@/moveCamera";
 import { Node } from "@babylonjs/core/node";
@@ -62,7 +67,8 @@ import {
   oldTiles,
   whiteLeather,
 } from "./walls";
-import { TextureCanvasComponent } from "@babylonjs/inspector/components/actionTabs/tabs/propertyGrids/materials/textures/textureCanvasComponent";
+
+import { NiceLoader } from "./niceloader";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -79,6 +85,7 @@ export default class MainScene {
   private morseSoundState: boolean = false;
   private lightSwitchSound: Sound;
   private _fpsCameraActive: boolean;
+  private alreadyImproved: boolean;
 
   constructor(
     private scene: Scene,
@@ -248,7 +255,8 @@ export default class MainScene {
     this.scene.imageProcessingConfiguration.toneMappingEnabled = true;
     this.scene.imageProcessingConfiguration.toneMappingType = 1;
 
-    this.scene.imageProcessingConfiguration.exposure = 0.9;
+    this.scene.imageProcessingConfiguration.exposure =
+      WORKSHOP.EXPOSURE.mainExposure;
 
     //
     //  pipeline.sharpenEnabled = true;
@@ -322,13 +330,18 @@ export default class MainScene {
     top.style.position = "absolute";
     top.style.margin = "0 auto";
     top.style.top = "10px";
-    top.style.right = "10px";
+    top.style.left = "370px";
     top.style.color = "yellow";
-    top.innerHTML = "Press R to view closer";
+    // top.innerHTML = "Press R to view closer";
     document.body.appendChild(top);
     top.style.display = "none";
     //
-
+    const tmpArr = [];
+    new NiceLoader(this.scene, tmpArr, {
+      container: "top",
+      showExportAll: false,
+      maxLights: 8,
+    });
     //
     const gl = new GlowLayer("gl");
     gl.intensity = 0.7;
@@ -361,10 +374,11 @@ export default class MainScene {
     }
 
     console.log(gl);
+
     //
     this.roomPicker = new GPUPicker();
     this.roomPicker.setPickingList(this.pickArray);
-    console.log(this.roomPicker);
+    //  console.log(this.roomPicker);
     console.log(this.pickArray);
     //
     //
@@ -376,7 +390,7 @@ export default class MainScene {
         .pickAsync(this.scene.pointerX, this.scene.pointerY)
         .then((pickingInfo) => {
           if (pickingInfo) {
-            console.log(pickingInfo.mesh.name);
+            //   console.log(pickingInfo.mesh.name);
             if (
               this.scene.activeCamera!.name == "camera" ||
               this.scene.activeCamera!.name == "FirstViewCamera"
@@ -389,6 +403,20 @@ export default class MainScene {
               } else {
                 itemHeader!.innerHTML = pickingInfo.mesh.name;
               }
+
+              //
+              if (
+                pickingInfo.mesh.metadata.mayBeImproved &&
+                !this.alreadyImproved
+              ) {
+                itemAside!.style.display = "initial";
+                itemAside!.innerHTML = "Press I to improve cloth quality";
+              }
+
+              if (this.alreadyImproved) {
+                itemAside!.style.display = "none";
+              }
+              //
 
               let imgSrc = "img/" + pickingInfo.mesh.name + ".png";
               if (pickingInfo.mesh.parent) {
@@ -403,7 +431,7 @@ export default class MainScene {
               const imgOK = imageExists(imgSrc);
 
               imgOK.then((res) => {
-                console.log(res);
+                //   console.log(res);
                 if (res) {
                   // itemImage.style.visibility = "initial";
                   itemImage!.src = imgSrc;
@@ -422,32 +450,35 @@ export default class MainScene {
               document.getElementById("top_container")!.style.display =
                 "initial";
               //
+              /*
               top.innerHTML =
                 pickingInfo.mesh.name + "<br>Press R to view closer";
               //  console.log(pickingInfo.mesh.metadata.action);
+
+              */
               if (pickingInfo.mesh.metadata.action !== undefined) {
                 switch (pickingInfo.mesh.metadata.action) {
                   case "switchLight":
-                    top.innerHTML += "<br>Press E to switch light";
+                    //  top.innerHTML += "<br>Press E to switch light";
                     itemAside!.style.display = "initial";
                     itemAside!.innerHTML = "Press E to switch light";
                     break;
                   case "Turn_Radio":
-                    top.innerHTML += "<br>Press E to switch radio";
+                    //  top.innerHTML += "<br>Press E to switch radio";
                     itemAside!.style.display = "initial";
                     itemAside!.innerHTML = "Press E to switch radio";
                     break;
                   case "Turn_Morse":
-                    top.innerHTML += "<br>Press E to switch radio";
+                    //  top.innerHTML += "<br>Press E to switch radio";
                     itemAside!.style.display = "initial";
                     itemAside!.innerHTML = "Press E to switch radio";
                     break;
                 }
-              }
+              } //
             }
           } else {
             this.isPickedGood = false;
-            top.innerHTML = "";
+            //   top.innerHTML = "";
             itemAside!.style.display = "none";
             document.getElementById("top_container")!.style.display = "none";
           }
@@ -464,6 +495,7 @@ export default class MainScene {
     let eKeyCounter = 0;
     let tKeyCounter = 0;
     let yKeyCounter = 0;
+    let lKeyCounter = 0;
     document.addEventListener("keyup", (event) => {
       const keyName = event.key;
       if (keyName === "1" || keyName === "!") {
@@ -492,8 +524,10 @@ export default class MainScene {
             console.log("isPickedGood ", this.isPickedGood);
             console.log(this.meshPicked.name);
             this.makeBlur();
+            /*
             document.getElementById("top")!.innerHTML =
               this.meshPicked.name + "<br> Press R to close";
+              */
           }
         }
       }
@@ -633,7 +667,25 @@ export default class MainScene {
         }
       }
       //
+      if (keyName === "i" || keyName === "I") {
+        changeAva("kit/ava2-opt.glb", this.scene);
+        this.alreadyImproved = true;
+        itemAside!.style.display = "none";
+      }
+      //
+      if (keyName === "l" || keyName === "L") {
+        lKeyCounter++;
+        console.log(lKeyCounter);
+        if (lKeyCounter % 2 == 0) {
+          document.getElementById("top")!.style.display = "none";
+        } else {
+          document.getElementById("top")!.style.display = "inline-block";
+        }
+      }
+      //
     }); // end event
+    //
+    // retargetAnimations(this.scene);
     //
     this.scene.meshes.forEach((m) => {
       m.checkCollisions = true;
@@ -650,6 +702,40 @@ export default class MainScene {
         "Left Click to Start <br><small>Drag - right button (CHECK NOW)</small><br><small>1, 2, 3 change camera modes (WIP)<br><h6>Don't press T or Y</h6></small>";
     }, 500);
     //
+
+    //
+
+    const res10 = await SceneLoader.ImportMeshAsync(
+      "",
+      "kit/simple_short_crate-opt.glb"
+    );
+
+    const small_box = res10.meshes[1] as Mesh;
+    small_box.setParent(null);
+    res10.meshes[0].dispose();
+    small_box.scaling.scaleInPlace(0.1);
+
+    small_box.name = "small_box";
+
+    small_box.position = new Vector3(-0.2, 0.09, -4.7);
+    small_box.rotate(Vector3.Up(), Tools.ToRadians(-15), Space.WORLD);
+
+    const smbi = small_box.createInstance("smbi");
+    smbi.position.y = 0.28;
+    smbi.rotate(Vector3.Up(), Tools.ToRadians(35), Space.WORLD);
+    const smbi2 = small_box.createInstance("smbi2");
+    smbi2.position.y = 0.47;
+    smbi2.rotate(Vector3.Up(), Tools.ToRadians(0), Space.WORLD);
+    //
+    const smbi3 = small_box.createInstance("smbi3");
+    smbi3.position.y = 0.66;
+    smbi2.rotate(Vector3.Up(), Tools.ToRadians(20), Space.WORLD);
+    //
+    //
+    //
+    // changeAva("kit/ava2-opt.glb", this.scene);
+    //
+
     const loadingScreen = document.getElementById("loading-screen");
 
     loadingScreen!.classList.add("fade-out");
@@ -784,7 +870,10 @@ export default class MainScene {
       kernel += 0.5;
       postProcess0.kernel = kernel;
       postProcess1.kernel = kernel;
-      if (this.scene.imageProcessingConfiguration.exposure > 0.3) {
+      if (
+        this.scene.imageProcessingConfiguration.exposure >
+        WORKSHOP.EXPOSURE.exposureThreshold
+      ) {
         this.scene.imageProcessingConfiguration.exposure -= 0.01;
       }
       if (kernel >= 32) {
@@ -808,7 +897,8 @@ export default class MainScene {
     if (this.scene.getPostProcessByName("Vertical_blur")) {
       this.scene.getPostProcessByName("Vertical_blur")!.dispose();
     }
-    this.scene.imageProcessingConfiguration.exposure = 0.8;
+    this.scene.imageProcessingConfiguration.exposure =
+      WORKSHOP.EXPOSURE.mainExposure;
     this.restoreCamera();
     // this.roomPicker.setPickingList(this.pickArray);
   }
@@ -845,8 +935,8 @@ export default class MainScene {
         camera.layerMask = 0x20000000;
 
         this.scene.clearColor = new Color4(0, 0, 0, 0);
-        this.scene.imageProcessingConfiguration.exposure = 1;
-
+        this.scene.imageProcessingConfiguration.exposure =
+          WORKSHOP.EXPOSURE.viewerExposure;
         this.scene.activeCamera = camera;
         camera.lowerRadiusLimit = 1.3;
         camera.useBouncingBehavior = true;
@@ -872,17 +962,19 @@ export default class MainScene {
 
         camera.useFramingBehavior = true;
         camera.framingBehavior!.framingTime = 800;
-        /*
+
         camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
           () => {
+            /*
             Tools.CreateScreenshotUsingRenderTarget(
               this.engine,
               this.scene.activeCamera!,
               { precision: 0.5 }
             );
+            */
           }
         );
-*/
+
         if (!meshToZoom.parent) {
           const instancedMesh = meshToZoom.clone(meshToZoom.name + "_inst");
           instancedMesh.layerMask = 0x20000000;
@@ -950,9 +1042,10 @@ export default class MainScene {
       this.instaMesh.dispose();
     }
     console.log(this.roomPicker);
-    document.getElementById("top")!.innerHTML = "";
-
-    this.scene.getCameraByName("camClone2")!.dispose();
+    // document.getElementById("top")!.innerHTML = "";
+    if (this.scene.getCameraByName("camClone2") !== undefined) {
+      this.scene.getCameraByName("camClone2")!.dispose();
+    }
 
     setTimeout(() => {
       this.pickArray.forEach((m) => {
@@ -1012,7 +1105,15 @@ export default class MainScene {
     pointerImage.height = "10px";
     pointerImage.isVisible = true;
     advancedTexture.addControl(pointerImage);
-    */
+
+    console.log(this.scene.pointerX, this.scene.pointerY);
+    this.scene.pointerX = this.canvas.width / 2;
+    this.scene.pointerY = this.canvas.height / 2;
+    console.log(this.scene.pointerX, this.scene.pointerY);
+
+  //  this.engine.enterFullscreen(true);
+*/
+    //  this.canvas.requestPointerLock();
   }
   //
 }
@@ -1068,4 +1169,83 @@ export function changeTex(mat, data, tiles?) {
       t.uScale = tiles;
     });
   }
+}
+
+export async function changeAva(url: string, scene: Scene) {
+  const res = await loadAssetContainerAsync(url, scene);
+  const root = res.meshes[0];
+  console.log(res.textures);
+
+  const mat = scene.getMeshByName("Wolf3D_Avatar")!.material as PBRMaterial;
+  mat.albedoTexture!.dispose();
+  mat.albedoTexture = res.textures.find((t) =>
+    t.name.includes("Base")
+  ) as Texture;
+  mat.bumpTexture!.dispose();
+  mat.bumpTexture = res.textures.find((t) =>
+    t.name.includes("Normal")
+  ) as Texture;
+  mat.metallicTexture!.dispose();
+  mat.metallicTexture = res.textures.find((t) =>
+    t.name.includes("Rough")
+  ) as Texture;
+}
+
+export function retargetAnimations(scene: Scene) {
+  const baseURL = "https://raw.githubusercontent.com/eldinor/ForBJS/master/";
+
+  let res = SceneLoader.LoadAssetContainerAsync("kit/", "ava1.glb", scene);
+
+  let ani = SceneLoader.LoadAssetContainerAsync(baseURL, "all-anim.glb", scene);
+
+  ani.then((container) => {
+    console.log(container);
+
+    res.then((res) => {
+      let avag = applyAnimationGroups(container.animationGroups, res);
+
+      res.addAllToScene();
+      console.log(res);
+      console.log(avag);
+      avag[0].play();
+      avag[0].loopAnimation = true;
+    });
+
+    //
+  });
+
+  let animationGroups: AnimationGroup[];
+
+  const applyAnimationGroups = (
+    ags: AnimationGroup[],
+    avatarContainer: AssetContainer
+  ) => {
+    const avatarAGs: AnimationGroup[] = [];
+
+    const avatarRoot = avatarContainer.meshes[0];
+
+    if (!avatarRoot) {
+      return [];
+    }
+
+    const modelTransformNodes = avatarRoot.getChildTransformNodes();
+
+    ags.forEach((ag) => {
+      const modelAnimationGroup = ag.clone(ag.name, (oldTarget) => {
+        return modelTransformNodes.find((node) => node.name === oldTarget.name);
+      });
+
+      avatarAGs.push(modelAnimationGroup);
+    });
+
+    if (ags === animationGroups) {
+      // clearup existing animation groups
+      animationGroups.forEach((ag) => {
+        ag.dispose();
+      });
+      animationGroups = [];
+    }
+
+    return avatarAGs;
+  };
 }
