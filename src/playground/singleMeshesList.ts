@@ -13,6 +13,7 @@ export interface ISingleModels {
     action?: string;
     sound?: boolean;
     longName?: string;
+    doNotPick?: boolean;
   };
 }
 
@@ -59,6 +60,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-2, 4, -4),
     glow: true,
+    metadata: { doNotPick: true },
   },
   {
     url: "kit/wooden_chair-opt.glb",
@@ -147,6 +149,22 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.5,
     position: new Vector3(-0.25, 0, 1.5),
     metadata: { longName: "Metal Garbage Bin" },
+  },
+  {
+    url: "kit/ventrounded-opt.glb",
+    name: "ventrounded",
+    scalingFactor: 0.005,
+    position: new Vector3(-10, 3.4, 0),
+    options: { rotateY: 90 },
+    metadata: { longName: "Ventilation Thing" },
+  },
+  {
+    url: "kit/scifi_tank_doodad-opt.glb",
+    name: "scifidoodle",
+    scalingFactor: 0.5,
+    position: new Vector3(-9.6, 0.28, 1.3),
+    options: { rotateY: -90 },
+    metadata: { longName: "Sci-Fi Doodle" },
   },
   /*
   {
@@ -328,6 +346,32 @@ export const singleMeshesList: Array<ISingleModels> = [
     glow: true,
     glowLevel: 1.5,
   },
+  {
+    url: "kit/metal_door_red-opt.glb",
+    name: "metaldoor",
+    scalingFactor: 1.2,
+    position: new Vector3(-9.999, 0, 0),
+    options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
+    metadata: { longName: "The Door" },
+  },
+  {
+    url: "kit/door_room_unreal_01-opt.glb",
+    name: "bigdoor",
+    scalingFactor: 3,
+    position: new Vector3(-18, 2, 0),
+    glow: true,
+    glowLevel: 1.1,
+    options: { rotateX: 0, rotateY: 180, rotateZ: 0 },
+    metadata: { longName: "Big Door", doNotPick: true },
+  },
+  {
+    url: "kit/worn_concrete_block-opt.glb",
+    name: "concreteblock",
+    scalingFactor: 0.25,
+    position: new Vector3(-10.1, 2.5, 0),
+    options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
+    metadata: { longName: "Block" },
+  },
   /*
   {
     url: "kit/floor_carpet-opt.glb",
@@ -387,7 +431,7 @@ export const complexMeshesList: Array<IComplexModels> = [
     pickableMeshname: "Workbench_Group_1_low_Mat_Workbench_0",
     metadata: { longName: "Workbench with Tools" },
   },
-
+  /*
   {
     url: "kit/door-opt.glb",
     name: "door_window",
@@ -395,7 +439,7 @@ export const complexMeshesList: Array<IComplexModels> = [
     position: new Vector3(-10, 2.1, 0),
     options: { rotateX: 0, rotateY: 90, rotateZ: 0 },
   },
-
+*/
   {
     url: "kit/ava1.glb",
     name: "ava1",

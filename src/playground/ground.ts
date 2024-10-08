@@ -1,8 +1,8 @@
-import { Scene, MeshBuilder, Tools } from "@babylonjs/core/";
-import { ToolBar } from "@babylonjs/inspector/components/actionTabs/tabs/propertyGrids/materials/textures/toolBar";
+import { Scene, MeshBuilder, Tools, Vector3 } from "@babylonjs/core/";
 import "@babylonjs/loaders";
 
 import {
+  brownCement,
   checkerTiles,
   cobbleStone,
   createMaterial,
@@ -11,6 +11,7 @@ import {
   exposedBrick,
   greyWood,
   oldStone,
+  oldStone2,
   oldTiles,
   whiteLeather,
 } from "./walls";
@@ -31,9 +32,13 @@ export class Ground {
     );
     mesh.material = createMaterial("texture/", checkerTiles, "floor", 10);
     mesh.isPickable = false;
-    mesh.position.x -= 5;
+    mesh.position.x -= 8;
     mesh.position.z = 0.35;
     // new BABYLON.PhysicsAggregate(mesh, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene)
+
+    const ceilingPlane = mesh.createInstance("ceilingPlane");
+    ceilingPlane.position.y = 4;
+    ceilingPlane.rotation.x = Tools.ToRadians(180);
   }
 
   _createWalls() {
@@ -64,6 +69,24 @@ export class Ground {
     plane4.rotation.y = -Math.PI / 2;
 
     plane4.position.x = -10;
+    plane4.position.z = 5.6;
+    //
+    const plane5 = plane1.createInstance("plane5");
+
+    plane5.rotation.y = -Math.PI / 2;
+
+    plane5.position.x = -10;
+    plane5.position.z = -5.6;
+
+    const plane6 = plane1.clone("plane6");
+
+    plane6.rotation.y = -Math.PI / 2;
+
+    plane6.position.x = -10.01;
+    plane6.position.y = 3.98;
+
+    plane6.material = createMaterial("texture/", brownCement, "plane6", 1);
+    plane6.scaling = new Vector3(0.3, 0.3, 0.3);
 
     /*
     const plane5 = plane1.createInstance("plane5");

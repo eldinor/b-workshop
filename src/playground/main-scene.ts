@@ -36,6 +36,7 @@ import {
   AnimationGroup,
   AssetContainer,
   SSRRenderingPipeline,
+  Matrix,
 } from "@babylonjs/core/";
 import "@babylonjs/loaders";
 // import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
@@ -117,8 +118,66 @@ export default class MainScene {
     this.camera.wheelDeltaPercentage = 0.01;
     //
     // this.engine.loadingScreen.displayLoadingUI();
-    // this.engine.loadingUIText = "Hello";
+
     //
+  }
+
+  _reverseCamera() {
+    const easingFunction = new CubicEase();
+    easingFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
+    const camera = this.scene.getCameraByName("camera") as ArcRotateCamera;
+    this.scene.activeCamera = camera;
+    Animation.CreateAndStartAnimation(
+      "reverse",
+      camera,
+      "target",
+      60,
+      120,
+      camera.target,
+      new Vector3(-9.35, 0.75, -2.32),
+      Animation.ANIMATIONLOOPMODE_CONSTANT,
+      easingFunction
+    );
+    //  this.camera.setTarget(new Vector3(-9.346, 0.749, -2.316));
+    Animation.CreateAndStartAnimation(
+      "alpha",
+      camera,
+      "alpha",
+      60,
+      120,
+      camera.alpha,
+      0.495,
+      Animation.ANIMATIONLOOPMODE_CONSTANT,
+      easingFunction
+    );
+
+    // this.camera.rebuildAnglesAndRadius();
+    //this.camera.alpha = 0.6;
+    Animation.CreateAndStartAnimation(
+      "beta",
+      camera,
+      "beta",
+      60,
+      120,
+      camera.beta,
+      1.44,
+      Animation.ANIMATIONLOOPMODE_CONSTANT,
+      easingFunction
+    );
+
+    //  this.camera.beta = 1.5;
+    Animation.CreateAndStartAnimation(
+      "radius",
+      camera,
+      "radius",
+      60,
+      120,
+      camera.radius,
+      5,
+      Animation.ANIMATIONLOOPMODE_CONSTANT,
+      easingFunction
+    );
+    // this.camera.radius = 5;
   }
 
   _setAudio() {
@@ -233,8 +292,6 @@ export default class MainScene {
 
     const spotlight3 = spotlight.clone("spotlight3") as SpotLight;
     spotlight3.position.x = -8;
-    spotlight3.position.y = 2.5;
-    spotlight3.direction.x = -0.05;
     spotlight3.direction.z = -0.05;
     //
     this.spotLightArray.push(spotlight3);
@@ -250,7 +307,7 @@ export default class MainScene {
       [this.scene.activeCamera!]
     );
     pipeline.fxaaEnabled = true;
-    pipeline.samples = 4;
+    pipeline.samples = 8;
     // pipeline.imageProcessingEnabled = true
     this.scene.imageProcessingConfiguration.toneMappingEnabled = true;
     this.scene.imageProcessingConfiguration.toneMappingType = 1;
@@ -354,7 +411,9 @@ export default class MainScene {
           ).emissiveIntensity = item.glowLevel;
         }
       }
-      this.pickArray.push(this.scene.getMeshByName(item.name) as Mesh);
+      if (!item.metadata?.doNotPick) {
+        this.pickArray.push(this.scene.getMeshByName(item.name) as Mesh);
+      }
     }
 
     for (const item of complexMeshesList) {
@@ -374,6 +433,10 @@ export default class MainScene {
     }
 
     console.log(gl);
+
+    gl.addIncludedOnlyMesh(this.scene.getMeshByName("plane1")! as Mesh);
+    gl.addIncludedOnlyMesh(this.scene.getMeshByName("plane6")! as Mesh);
+    gl.addIncludedOnlyMesh(this.scene.getMeshByName("metaldoor")! as Mesh);
 
     //
     this.roomPicker = new GPUPicker();
@@ -565,7 +628,7 @@ export default class MainScene {
               //
               this.scene
                 .getAnimationGroupByName("switchLight")!
-                .start(false, -1, 0, 60);
+                .start(false, 1, 60, 120);
               this.scene
                 .getAnimationGroupByName("switchLight")!
                 .onAnimationEndObservable.addOnce(() => {
@@ -683,6 +746,58 @@ export default class MainScene {
         }
       }
       //
+      if (keyName === "k" || keyName === "K") {
+        this._reverseCamera();
+      }
+      //
+      //
+      if (keyName === "h" || keyName === "H") {
+        document.getElementById("info")!.style.display = "inline-block";
+        document.getElementById("info")!.innerHTML = WORKSHOP.INFO.afterLoading;
+        setTimeout(() => {
+          document.getElementById("info")!.style.display = "none";
+        }, 3000);
+      }
+      //
+      if (keyName === "p" || keyName === "P") {
+        document.getElementById("info")!.style.display = "inline-block";
+        document.getElementById("info")!.innerHTML =
+          "<h3>Scene Statistics</h3>";
+        //
+
+        //
+        let statsString =
+          "<p>Meshes: " + this.scene.meshes.length.toString() + "</p>";
+        //
+        statsString +=
+          "<p>Materials: " + this.scene.materials.length.toString() + "</p>";
+        statsString +=
+          "<p>Textures: " + this.scene.textures.length.toString() + "</p>";
+        statsString +=
+          "<p>Animations: " +
+          this.scene.animationGroups.length.toString() +
+          "</p>";
+
+        statsString += "<p>Lights: " + this.scene.lights.length.toString();
+        ("</p>");
+        //@ts-ignore
+        statsString +=
+          "<p>Heap Used: " +
+          //@ts-ignore
+          (!performance.memory
+            ? "unavailabe"
+            : //@ts-ignore
+              (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed() +
+              " Mb");
+
+        //
+        document.getElementById("info")!.innerHTML += statsString;
+        //
+        setTimeout(() => {
+          document.getElementById("info")!.style.display = "none";
+        }, 4000);
+      }
+      //
     }); // end event
     //
     // retargetAnimations(this.scene);
@@ -692,17 +807,35 @@ export default class MainScene {
     });
     //
     //
+
+    //
+    //
+    //
     setTimeout(() => {
       document.getElementById("info")!.innerHTML =
         "Everything should be loaded";
     }, 200);
     setTimeout(() => {
       document.getElementById("info")!.style.top = "50%";
-      document.getElementById("info")!.innerHTML =
-        "Left Click to Start <br><small>Drag - right button (CHECK NOW)</small><br><small>1, 2, 3 change camera modes (WIP)<br><h6>Don't press T or Y</h6></small>";
+      document.getElementById("info")!.innerHTML = WORKSHOP.INFO.afterLoading;
     }, 500);
-    //
+    ////
+    /* // for Atomic fridge
+    const cylinder = MeshBuilder.CreateCylinder("cylinder", {
+      diameterTop: 0.2,
+      height: 3,
+    });
+    cylinder.position = new Vector3(-9.15, 0.6, -1.14);
+    const mat = new PBRMaterial("mat");
+    mat.roughness = 0.5;
+    mat.emissiveColor = Color3.Red();
+    mat.wireframe = true;
+    cylinder.material = mat;
 
+    gl.addIncludedOnlyMesh(cylinder);
+    */
+    //
+    createCorridor(this.scene);
     //
 
     const res10 = await SceneLoader.ImportMeshAsync(
@@ -731,7 +864,18 @@ export default class MainScene {
     smbi3.position.y = 0.66;
     smbi2.rotate(Vector3.Up(), Tools.ToRadians(20), Space.WORLD);
     //
+    const ceiling_lamp = this.scene.getMeshByName("ceiling_lamp") as Mesh;
+
+    const c_lamp1 = ceiling_lamp.createInstance("c_lamp1");
+    c_lamp1.position.x = -2;
+    c_lamp1.position.z = 4;
+
+    const c_lamp2 = ceiling_lamp.createInstance("c_lamp2");
+    c_lamp2.position.x = -8;
+
     //
+    //
+
     //
     // changeAva("kit/ava2-opt.glb", this.scene);
     //
@@ -923,8 +1067,11 @@ export default class MainScene {
         document.body.style.backgroundSize = "cover";
 
         this.scene.environmentIntensity = 0.9;
+
+        //
+
         const camera = new ArcRotateCamera(
-          "camClone2",
+          "viewCamera",
           -Math.PI,
           1.1,
           4,
@@ -965,13 +1112,11 @@ export default class MainScene {
 
         camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
           () => {
-            /*
             Tools.CreateScreenshotUsingRenderTarget(
               this.engine,
               this.scene.activeCamera!,
               { precision: 0.5 }
             );
-            */
           }
         );
 
@@ -1043,8 +1188,8 @@ export default class MainScene {
     }
     console.log(this.roomPicker);
     // document.getElementById("top")!.innerHTML = "";
-    if (this.scene.getCameraByName("camClone2") !== undefined) {
-      this.scene.getCameraByName("camClone2")!.dispose();
+    if (this.scene.getCameraByName("viewCamera") !== undefined) {
+      this.scene.getCameraByName("viewCamera")!.dispose();
     }
 
     setTimeout(() => {
@@ -1128,16 +1273,10 @@ export async function loadAnimatedSwitch(url: string, scene: Scene) {
   const ag = res.animationGroups[0];
   ag.name = "switchLight";
   ag.loopAnimation = false;
-  ag.goToFrame(60);
-  ag.pause();
-  res.addAllToScene();
+  ag.stop();
+  ag.start(false, 1, 50, 60);
 
-  setTimeout(() => {
-    ag.play();
-  }, 1000);
-  setTimeout(() => {
-    ag.start(false, 1, 0, 60);
-  }, 4000);
+  res.addAllToScene();
 
   return res;
 }
@@ -1248,4 +1387,81 @@ export function retargetAnimations(scene: Scene) {
 
     return avatarAGs;
   };
+}
+
+export async function createCorridor(scene: Scene) {
+  const corridorWall_1 = MeshBuilder.CreatePlane("corridorWall_1", {
+    width: 10,
+    height: 10,
+  });
+  corridorWall_1.material = createMaterial(
+    "texture/",
+    oldStone,
+    "corridorWall_1",
+    5
+  );
+  corridorWall_1.rotation.y = Math.PI;
+  corridorWall_1.position.x = -15;
+  corridorWall_1.position.z = -2.9;
+  corridorWall_1.isPickable = false;
+
+  const corridorWall_2 = corridorWall_1.createInstance("const corridorWall_2");
+  corridorWall_2.rotation.y = 2 * Math.PI;
+  corridorWall_2.position.z = 2.9;
+  //
+  const corridorLightGreen = new PointLight(
+    "corridorLightGreen",
+    new Vector3(-16, 2.9, 1)
+  );
+  corridorLightGreen.intensity = 4;
+  corridorLightGreen.diffuse = Color3.Green();
+  const door = scene.getMeshByName("bigdoor")!;
+  (door.material as PBRMaterial).environmentIntensity = 0.5;
+  corridorLightGreen.includedOnlyMeshes.push(door, corridorWall_1);
+
+  const corridorLightWhite = new PointLight(
+    "corridorLightWhite",
+    new Vector3(-16, 2.95, -1.25)
+  );
+  corridorLightWhite.intensity = 4;
+  corridorLightWhite.diffuse = Color3.White();
+
+  // corridorLightGreen.excludedMeshes.push(scene)
+  corridorLightWhite.includedOnlyMeshes.push(
+    door,
+    corridorWall_1,
+    corridorWall_2
+  );
+
+  const block = scene.getMeshByName("concreteblock") as Mesh;
+  const blockRear = block.createInstance("blockRear");
+  blockRear.scaling.scaleInPlace(4);
+  blockRear.position.x = -19.5;
+  blockRear.position.y = 3.75;
+
+  /*
+
+
+  
+    const block = this.scene.getMeshByName("ceiling_lamp") as Mesh;
+
+    var matrix = Matrix.Translation(-2, 2, 0);
+
+    var idx = block.thinInstanceAdd(matrix);
+    var idx2 = block.thinInstanceAddSelf();
+
+    var matrix2 = Matrix.Translation(-3, 1, 0);
+
+    block.thinInstanceSetMatrixAt(idx2, matrix2);
+  const block = scene.getMeshByName("concreteblock") as Mesh;
+  console.log("block ", block);
+  let matrix = Matrix.Translation(-2, 2, 0);
+
+  var idx = block.thinInstanceAdd(matrix);
+  var idx2 = block.thinInstanceAddSelf();
+  let matrix2 = Matrix.Translation(2, 1, 0);
+
+  block.thinInstanceSetMatrixAt(idx2, matrix2);
+  */
+  // block!.thinInstanceAdd(Matrix.Translation(2, 2, 2));
 }
