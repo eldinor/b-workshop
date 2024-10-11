@@ -131,7 +131,7 @@ font-size: 1.4rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #cccccc46;
+  background-color: darkslategray;
   background-image: url("/img/cover1.png");
   z-index: 1000;
   opacity: 1;

@@ -162,8 +162,8 @@ export const singleMeshesList: Array<ISingleModels> = [
     url: "kit/scifi_tank_doodad-opt.glb",
     name: "scifidoodle",
     scalingFactor: 0.5,
-    position: new Vector3(-9.6, 0.28, 1.3),
-    options: { rotateY: -90 },
+    position: new Vector3(-9.5, 0.43, 1.4),
+    options: { rotateY: -95 },
     metadata: { longName: "Sci-Fi Doodle" },
   },
   /*
@@ -372,6 +372,23 @@ export const singleMeshesList: Array<ISingleModels> = [
     options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
     metadata: { longName: "Block" },
   },
+  {
+    url: "kit/euro_pallet_textured-opt.glb",
+    name: "europallet",
+    scalingFactor: 1,
+    position: new Vector3(-9.5, 0, 1.4),
+    options: { rotateX: 0, rotateY: 88, rotateZ: 0 },
+    metadata: { longName: "Euro Pallet" },
+  },
+  {
+    url: "kit/hard_drive-opt.glb",
+    name: "harddrive",
+    scalingFactor: 1,
+    position: new Vector3(-0.4, 0.87, -2.9),
+    options: { rotateX: -90, rotateY: -135, rotateZ: 0 },
+    metadata: { longName: "Hard Drive" },
+  },
+
   /*
   {
     url: "kit/floor_carpet-opt.glb",
@@ -416,6 +433,7 @@ export interface IComplexModels {
     sound?: boolean;
     longName?: string;
     mayBeImproved?: boolean;
+    merge?: boolean;
   };
 }
 
@@ -478,5 +496,15 @@ export const complexMeshesList: Array<IComplexModels> = [
     options: { rotateX: 0, rotateY: -20, rotateZ: 0 },
     pickableMeshname: "AlarmArm_QuartzClock_0",
     metadata: { longName: "Quartz Clock" },
+  },
+
+  {
+    url: "kit/door_keys-opt.glb",
+    name: "doorkeys",
+    scalingFactor: 0.1,
+    position: new Vector3(-4.65, 0.97, 4.35),
+    options: { rotateX: 90, rotateY: 0, rotateZ: 60 },
+    pickableMeshname: "doorkeys",
+    metadata: { longName: "Door Keys", merge: true },
   },
 ];

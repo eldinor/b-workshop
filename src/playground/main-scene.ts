@@ -37,6 +37,10 @@ import {
   AssetContainer,
   SSRRenderingPipeline,
   Matrix,
+  TonemapPostProcess,
+  TonemappingOperator,
+  ConvolutionPostProcess,
+  LensRenderingPipeline,
 } from "@babylonjs/core/";
 import "@babylonjs/loaders";
 // import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
@@ -70,6 +74,7 @@ import {
 } from "./walls";
 
 import { NiceLoader } from "./niceloader";
+import { wEffects } from "./effects";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -127,6 +132,7 @@ export default class MainScene {
     easingFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
     const camera = this.scene.getCameraByName("camera") as ArcRotateCamera;
     this.scene.activeCamera = camera;
+    camera.alpha = camera.alpha % (2 * Math.PI);
     Animation.CreateAndStartAnimation(
       "reverse",
       camera,
@@ -430,6 +436,24 @@ export default class MainScene {
           }
         }
       }
+      if (item.metadata?.merge) {
+        console.log("MERGE");
+        const root = this.scene.getMeshByName(item.name) as Mesh;
+        console.log(root.getChildMeshes());
+        const merged = Mesh.MergeMeshes(
+          root.getChildMeshes(),
+          true,
+          undefined,
+          undefined,
+          true,
+          true
+        );
+        root.dispose();
+        merged!.name = item.name;
+        // merged!.position = item.position;
+        merged!.metadata = item.metadata;
+        this.pickArray.push(merged as Mesh);
+      }
     }
 
     console.log(gl);
@@ -536,8 +560,13 @@ export default class MainScene {
                     itemAside!.style.display = "initial";
                     itemAside!.innerHTML = "Press E to switch radio";
                     break;
+                  default:
+                    itemAside!.style.display = "none";
                 }
-              } //
+              } else {
+                itemAside!.style.display = "none";
+              }
+              //
             }
           } else {
             this.isPickedGood = false;
@@ -796,6 +825,61 @@ export default class MainScene {
         setTimeout(() => {
           document.getElementById("info")!.style.display = "none";
         }, 4000);
+      }
+      //
+      if (keyName === "m" || keyName === "M") {
+        //  const wef = new wEffects(this.scene, this.camera);
+        //    console.log(wef);
+        //
+        const lensEffect = new LensRenderingPipeline(
+          "lensEffects",
+          {
+            edge_blur: 0,
+            chromatic_aberration: 0.2,
+            distortion: 1.0,
+            // etc.
+          },
+          this.scene,
+          1.0,
+          [this.scene.activeCamera!]
+        );
+        let lecnt = 0;
+        this.scene.onBeforeRenderObservable.add(() => {
+          lensEffect.edgeDistortion = 1 + Math.sin(lecnt);
+          lecnt += 0.01;
+        });
+
+        //    wef.convoluteEffect();
+        //
+        /*
+        const pp = wef.bwEffect();
+
+        wef.showMesh(this.scene.getMeshByName("military_radio") as Mesh);
+        wef.showMesh(this.scene.getMeshByName("Dish") as Mesh);
+        wef.showMesh(this.scene.getMeshByName("old_radio") as Mesh);
+        wef.showMesh(this.scene.getMeshByName("plastic_bucket") as Mesh);
+        wef.showMesh(this.scene.getMeshByName("propan_small") as Mesh);
+      
+        let promise = new Promise((resolve) => {
+          console.log("PROMISE START");
+          setTimeout(() => {
+            console.log("RESOLVED");
+            resolve;
+          }, 1000);
+        });
+
+        let allMeshes = this.scene.meshes;
+
+        let cnt = 500;
+
+        for (const mesh of allMeshes) {
+          setTimeout(() => {
+            wef.showMesh(mesh as Mesh);
+          }, cnt);
+          cnt = cnt + 100;
+        }
+*/
+        //
       }
       //
     }); // end event
@@ -1109,7 +1193,8 @@ export default class MainScene {
 
         camera.useFramingBehavior = true;
         camera.framingBehavior!.framingTime = 800;
-
+        /*
+// Screenshot for image thumbnails
         camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
           () => {
             Tools.CreateScreenshotUsingRenderTarget(
@@ -1119,12 +1204,14 @@ export default class MainScene {
             );
           }
         );
-
+// End screenshot
+*/
         if (!meshToZoom.parent) {
           const instancedMesh = meshToZoom.clone(meshToZoom.name + "_inst");
           instancedMesh.layerMask = 0x20000000;
           instancedMesh.position = Vector3.Zero();
           instancedMesh.normalizeToUnitCube();
+          //   instancedMesh.rotationQuaternion = null;
 
           this.instaMesh = instancedMesh;
 
@@ -1166,7 +1253,6 @@ export default class MainScene {
           );
 
           //    camera.setTarget(instancedRoot as Mesh);
-          //   console.log(camera.framingBehavior!.positionScale);
         }
       }
     );
