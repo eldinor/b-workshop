@@ -75,6 +75,8 @@ import {
 
 import { NiceLoader } from "./niceloader";
 import { wEffects } from "./effects";
+import { wSpeech } from "./speech";
+import { resolve } from "path";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -122,7 +124,6 @@ export default class MainScene {
     this.camera.minZ = 0.1;
     this.camera.wheelDeltaPercentage = 0.01;
     //
-    // this.engine.loadingScreen.displayLoadingUI();
 
     //
   }
@@ -402,7 +403,7 @@ export default class MainScene {
     const tmpArr = [];
     new NiceLoader(this.scene, tmpArr, {
       container: "top",
-      showExportAll: false,
+      showExportAll: true,
       maxLights: 8,
     });
     //
@@ -882,6 +883,17 @@ export default class MainScene {
         //
       }
       //
+      if (keyName === "j" || keyName === "J") {
+        console.log("JJJJJ");
+        //  wSpeech();
+        /*
+        let utterance = new SpeechSynthesisUtterance("Hello world!");
+        console.log(utterance);
+        utterance.lang = "en-US";
+        speechSynthesis.speak(utterance);
+        */
+      }
+      //
     }); // end event
     //
     // retargetAnimations(this.scene);
@@ -1193,6 +1205,52 @@ export default class MainScene {
 
         camera.useFramingBehavior = true;
         camera.framingBehavior!.framingTime = 800;
+        //
+
+        camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
+          async () => {
+            //
+            const synth = window.speechSynthesis;
+            console.log(synth.getVoices());
+
+            const vp = await new Promise((resolve) => {
+              let voices = synth.getVoices();
+              if (voices.length) {
+                resolve(voices);
+                return;
+              }
+              synth.onvoiceschanged = () => {
+                voices = synth.getVoices();
+                if (voices.length) resolve(voices);
+              };
+            });
+            console.log(synth.getVoices());
+
+            const femvoice = synth.getVoices()[7];
+            //
+            setTimeout(() => {
+              let utterance = new SpeechSynthesisUtterance(
+                meshToZoom.metadata.longName
+              );
+              console.log(utterance);
+              utterance.lang = "en-US";
+              speechSynthesis.speak(utterance);
+            }, 400);
+            if (meshToZoom.metadata.moreVoice) {
+              setTimeout(() => {
+                let utterance = new SpeechSynthesisUtterance(
+                  meshToZoom.metadata.moreVoice
+                );
+                console.log(utterance);
+                utterance.lang = "en-US";
+                utterance.voice = femvoice;
+                speechSynthesis.speak(utterance);
+              }, 1400);
+            }
+          }
+        );
+
+        //
         /*
 // Screenshot for image thumbnails
         camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
@@ -1212,8 +1270,12 @@ export default class MainScene {
           instancedMesh.position = Vector3.Zero();
           instancedMesh.normalizeToUnitCube();
           //   instancedMesh.rotationQuaternion = null;
-
+          console.log(meshToZoom.metadata);
           this.instaMesh = instancedMesh;
+
+          //
+
+          //
 
           camera.setTarget(instancedMesh);
         } else {
@@ -1300,6 +1362,11 @@ export default class MainScene {
     }
 
     this._fpsCameraActive = true;
+
+    this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(
+      "workshop_pipeline",
+      camera
+    );
 
     camera.ellipsoid = new Vector3(0.5, 1, 0.5);
     camera.speed = 0.3;

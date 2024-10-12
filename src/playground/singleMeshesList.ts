@@ -14,6 +14,7 @@ export interface ISingleModels {
     sound?: boolean;
     longName?: string;
     doNotPick?: boolean;
+    moreVoice?: string;
   };
 }
 
@@ -342,7 +343,10 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 0.75,
     position: new Vector3(-9.7, 1, -2.2),
     options: { rotateX: 0, rotateY: 180, rotateZ: 0 },
-    metadata: { longName: "Atomic Heart Fridge" },
+    metadata: {
+      longName: "Atomic Heart Fridge",
+      moreVoice: "Hello,  stranger!",
+    },
     glow: true,
     glowLevel: 1.5,
   },
