@@ -311,7 +311,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     scalingFactor: 1,
     position: new Vector3(-1.6, 0, -4.7),
     options: { rotateX: 0, rotateY: -50, rotateZ: 0 },
-    metadata: { longName: "Rail Light" },
+    metadata: { longName: "The Rail Light" },
   },
   {
     url: "kit/writebook_opt.glb",

@@ -101,6 +101,7 @@ export default class MainScene {
     private engine: Engine
   ) {
     this._setCamera(scene);
+    this._prepareFPSCamera();
     this._setAudio();
     this._setLight(scene);
     this.loadComponents();
@@ -126,6 +127,15 @@ export default class MainScene {
     //
 
     //
+  }
+
+  _prepareFPSCamera() {
+    const camera = new UniversalCamera(
+      "FirstViewCamera",
+      new Vector3(-4, 2, 0),
+      this.scene
+    );
+    camera.setTarget(Vector3.Zero());
   }
 
   _reverseCamera() {
@@ -1369,7 +1379,7 @@ export default class MainScene {
     );
 
     camera.ellipsoid = new Vector3(0.5, 1, 0.5);
-    camera.speed = 0.3;
+    camera.speed = 0.2;
 
     this.scene.collisionsEnabled = true;
     this.scene.gravity.y = -0.08;
