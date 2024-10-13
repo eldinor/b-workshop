@@ -94,6 +94,7 @@ export default class MainScene {
   private lightSwitchSound: Sound;
   private _fpsCameraActive: boolean;
   private alreadyImproved: boolean;
+  private speechMode: boolean = false;
 
   constructor(
     private scene: Scene,
@@ -599,6 +600,7 @@ export default class MainScene {
     let tKeyCounter = 0;
     let yKeyCounter = 0;
     let lKeyCounter = 0;
+    let jKeyCounter = 0;
     document.addEventListener("keyup", (event) => {
       const keyName = event.key;
       if (keyName === "1" || keyName === "!") {
@@ -895,13 +897,24 @@ export default class MainScene {
       //
       if (keyName === "j" || keyName === "J") {
         console.log("JJJJJ");
-        //  wSpeech();
-        /*
-        let utterance = new SpeechSynthesisUtterance("Hello world!");
-        console.log(utterance);
-        utterance.lang = "en-US";
-        speechSynthesis.speak(utterance);
-        */
+        jKeyCounter++;
+
+        if (jKeyCounter % 2 == 0) {
+          this.speechMode = false;
+          document.getElementById("info")!.style.display = "block";
+          document.getElementById("info")!.innerHTML =
+            "<h3>Voice Mode Off</h3>";
+          setTimeout(() => {
+            document.getElementById("info")!.style.display = "none";
+          }, 1000);
+        } else {
+          this.speechMode = true;
+          document.getElementById("info")!.style.display = "block";
+          document.getElementById("info")!.innerHTML = "<h3>Voice Mode On</h3>";
+          setTimeout(() => {
+            document.getElementById("info")!.style.display = "none";
+          }, 2000);
+        }
       }
       //
     }); // end event
@@ -1217,49 +1230,48 @@ export default class MainScene {
         camera.framingBehavior!.framingTime = 800;
         //
 
-        camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
-          async () => {
-            //
-            const synth = window.speechSynthesis;
-            console.log(synth.getVoices());
+        if (this.speechMode) {
+          camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
+            async () => {
+              //
+              const synth = window.speechSynthesis;
+              console.log(synth.getVoices());
 
-            const vp = await new Promise((resolve) => {
-              let voices = synth.getVoices();
-              if (voices.length) {
-                resolve(voices);
-                return;
-              }
-              synth.onvoiceschanged = () => {
-                voices = synth.getVoices();
-                if (voices.length) resolve(voices);
-              };
-            });
-            console.log(synth.getVoices());
+              const vp = await new Promise((resolve) => {
+                let voices = synth.getVoices();
+                if (voices.length) {
+                  resolve(voices);
+                  return;
+                }
+                synth.onvoiceschanged = () => {
+                  voices = synth.getVoices();
+                  if (voices.length) resolve(voices);
+                };
+              });
+              console.log(synth.getVoices());
 
-            const femvoice = synth.getVoices()[7];
-            //
-            setTimeout(() => {
-              let utterance = new SpeechSynthesisUtterance(
-                meshToZoom.metadata.longName
-              );
-              console.log(utterance);
-              utterance.lang = "en-US";
-              speechSynthesis.speak(utterance);
-            }, 400);
-            if (meshToZoom.metadata.moreVoice) {
+              //
               setTimeout(() => {
                 let utterance = new SpeechSynthesisUtterance(
-                  meshToZoom.metadata.moreVoice
+                  meshToZoom.metadata.longName
                 );
                 console.log(utterance);
                 utterance.lang = "en-US";
-                utterance.voice = femvoice;
                 speechSynthesis.speak(utterance);
-              }, 1400);
-            }
-          }
-        );
+              }, 400);
+              if (meshToZoom.metadata.moreVoice) {
+                setTimeout(() => {
+                  let utterance = new SpeechSynthesisUtterance(
+                    meshToZoom.metadata.moreVoice
+                  );
+                  console.log(utterance);
 
+                  speechSynthesis.speak(utterance);
+                }, 1400);
+              }
+            }
+          );
+        }
         //
         /*
 // Screenshot for image thumbnails
