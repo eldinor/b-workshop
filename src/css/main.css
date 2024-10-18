@@ -5,12 +5,19 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
+  touch-action: none;
+  background-image: url("/img/cover1.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 #renderCanvas {
   width: 100%;
   height: 100%;
   touch-action: none;
+  margin: 0;
+  padding: 0;
 }
 
 #display-fps {
@@ -23,4 +30,180 @@ body {
   line-height: 35px;
   color: #ca7497;
   font-size: 16px;
+}
+
+#info {
+  position: absolute;
+
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  
+ 
+  z-index: 1900;
+  pointer-events: none;
+  color:ivory;
+text-align: center;
+text-transform: uppercase;
+font-weight: 600;
+font-size: 1.4rem;
+}
+
+.card {
+
+  display: grid;
+  grid-template-rows: max-content 150px 1fr;
+
+  color: #fff;
+  /*
+  mask-image: linear-gradient(to bottom, #0005 50%, #000 50%);
+  mask-size: 100% 2px;
+*/
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card .content {
+  padding: 0.5rem;
+}
+
+.card h2 {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+  border-bottom: 1px solid #666;
+
+}
+
+.card img {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+
+}
+
+.card footer {
+  /*margin-bottom: 5px;
+  border-top: 1px solid rgb(59, 55, 55);
+  */
+  background-color: rgba(1, 41, 41, 0.4);
+  color: #fff;
+  padding: 0.5rem;
+  font-weight: 500;
+  font-size: 1.25rem;
+
+}
+
+#itemAside {
+
+  background-color: rgba(12, 2, 142, 0.3);
+  color: peachpuff;
+  padding: 0.5rem;
+  margin-top: 0px;
+}
+
+#pressR {
+  font-weight: 600;
+  color: ivory;
+  font-size: 1.25rem;
+}
+
+#itemContent {
+  display: none;
+}
+
+#top_container {
+  width: 360px;
+
+  position: absolute;
+  top: 0px;
+  left: 10px;
+  background-color: rgba(216, 207, 211, 0.2);
+  z-index: 2147483647;
+  display: none;
+  pointer-events: none;
+}
+
+#loading-screen {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: darkslategray;
+  background-image: url("/img/cover1.png");
+  z-index: 1000;
+  opacity: 1;
+  transition: 1.0s opacity;
+}
+
+#loading-screen.fade-out {
+  opacity: 0;
+}
+
+.spinner {
+  margin: 100px auto;
+  width: 50px;
+  height: 40px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.spinner>div {
+  background-color: #ffffff;
+  height: 100%;
+  width: 6px;
+  display: inline-block;
+
+  -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;
+  animation: sk-stretchdelay 1.2s infinite ease-in-out;
+}
+
+.spinner .rect2 {
+  -webkit-animation-delay: -1.1s;
+  animation-delay: -1.1s;
+}
+
+.spinner .rect3 {
+  -webkit-animation-delay: -1.0s;
+  animation-delay: -1.0s;
+}
+
+.spinner .rect4 {
+  -webkit-animation-delay: -0.9s;
+  animation-delay: -0.9s;
+}
+
+.spinner .rect5 {
+  -webkit-animation-delay: -0.8s;
+  animation-delay: -0.8s;
+}
+
+@-webkit-keyframes sk-stretchdelay {
+
+  0%,
+  40%,
+  100% {
+    -webkit-transform: scaleY(0.4)
+  }
+
+  20% {
+    -webkit-transform: scaleY(1.0)
+  }
+}
+
+@keyframes sk-stretchdelay {
+
+  0%,
+  40%,
+  100% {
+    transform: scaleY(0.4);
+    -webkit-transform: scaleY(0.4);
+  }
+
+  20% {
+    transform: scaleY(1.0);
+    -webkit-transform: scaleY(1.0);
+  }
 }

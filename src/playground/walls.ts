@@ -145,3 +145,72 @@ export function createMaterial(
   //
   return material;
 }
+/*
+export function updateTextures(
+  material: PBRMaterial,
+  folder: string,
+  data: ITexData
+) {
+  console.log(folder + data.folder + data.bump);
+  (material.bumpTexture as Texture).updateURL(folder + data.folder + data.bump);
+  (material.metallicTexture as Texture).updateURL(
+    folder + data.folder + data.metallic
+  );
+  (material.ambientTexture as Texture).updateURL(
+    folder + data.folder + data.ao
+  );
+}
+//////////////////////////////////////////////
+
+    NodeMaterial.ParseFromSnippetAsync("8HENV8#8", this.scene).then((mat) => {
+      mat!.getBlockByName("emptyTexture")!.texture = new Texture(
+        "texture/" + checkerTiles.folder + checkerTiles.albedo,
+        this.scene
+      );
+      mat.getBlockByName("startTexture").texture = new Texture(
+        "texture/" + exposedBrick.folder + exposedBrick.albedo,
+        this.scene
+      );
+      mat.getBlockByName("endTexture").texture = new Texture(
+        "texture/" + exposedBrick.folder + exposedBrick.albedo,
+        this.scene
+      );
+
+      var plane1 = MeshBuilder.CreatePlane("plane111", {
+        width: 1,
+        height: 0.25,
+      });
+      plane1.material = mat.clone("pm");
+      plane1.material.getBlockByName("fillRate").value = 0;
+      plane1.scaling.x = 3;
+
+      var box = MeshBuilder.CreateBox("box", { size: 1 }, this.scene);
+      box.material = mat.clone("bm");
+      box.position.y = 2;
+
+      var sphere = MeshBuilder.CreateSphere(
+        "sphere",
+        { diameter: 1 },
+        this.scene
+      );
+      sphere.position.y = 3;
+      sphere.scaling.setAll(2);
+      sphere.material = mat.clone("sm");
+
+      this.scene.getMeshByName("ground")!.material = mat.clone("grgr");
+
+      let counter = 0;
+      this.scene.onBeforeRenderObservable.add(() => {
+        if (counter < 1) {
+          plane1.material.getBlockByName("fillRate").value = counter;
+          box.material.getBlockByName("fillRate").value = counter;
+          sphere.material.getBlockByName("fillRate").value = counter;
+          this.scene
+            .getMeshByName("ground")!
+            .material.getBlockByName("fillRate").value = counter;
+          counter += 0.0005;
+        }
+      });
+    });
+
+*/
