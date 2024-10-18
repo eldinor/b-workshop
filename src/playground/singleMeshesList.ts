@@ -293,7 +293,7 @@ export const singleMeshesList: Array<ISingleModels> = [
     url: "kit/soviet_kettle-opt.glb",
     name: "old_kettle",
     scalingFactor: 0.3,
-    position: new Vector3(-5.56, 0.95, 4.1),
+    position: new Vector3(-5.56, 0.95, 4.5),
     options: { rotateX: 0, rotateY: 0, rotateZ: 0 },
     metadata: { longName: "Old Kettle" },
   },
@@ -510,5 +510,17 @@ export const complexMeshesList: Array<IComplexModels> = [
     options: { rotateX: 90, rotateY: 0, rotateZ: 60 },
     pickableMeshname: "doorkeys",
     metadata: { longName: "Door Keys", merge: true },
+  },
+
+  {
+    url: "kit/pipgood_s1-opt.glb",
+    name: "pipboy",
+    scalingFactor: 0.1,
+    position: new Vector3(-5.4, 1.03, 4.05),
+    options: { rotateX: -75, rotateY: 20, rotateZ: 0 },
+    pickableMeshname: "pipboy",
+    glow: true,
+    glowMeshName: "pipboy",
+    metadata: { longName: "The BabylonPress PIP Tool", merge: true },
   },
 ];

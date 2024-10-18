@@ -105,8 +105,8 @@ export default class MainScene {
     this._prepareFPSCamera();
     this._setAudio();
     this._setLight(scene);
-    this.loadComponents();
     this._setPipeLine();
+    this.loadComponents();
   }
 
   _setCamera(scene: Scene): void {
@@ -435,19 +435,6 @@ export default class MainScene {
     }
 
     for (const item of complexMeshesList) {
-      if (item.glow) {
-        if (item.glowMeshName !== undefined) {
-          gl.addIncludedOnlyMesh(
-            this.scene.getMeshByName(item.glowMeshName) as Mesh
-          );
-          if (item.glowLevel !== undefined) {
-            (
-              this.scene.getMeshByName(item.glowMeshName)!
-                .material as PBRMaterial
-            ).emissiveIntensity = item.glowLevel;
-          }
-        }
-      }
       if (item.metadata?.merge) {
         console.log("MERGE");
         const root = this.scene.getMeshByName(item.name) as Mesh;
@@ -465,6 +452,20 @@ export default class MainScene {
         // merged!.position = item.position;
         merged!.metadata = item.metadata;
         this.pickArray.push(merged as Mesh);
+      }
+
+      if (item.glow) {
+        if (item.glowMeshName !== undefined) {
+          gl.addIncludedOnlyMesh(
+            this.scene.getMeshByName(item.glowMeshName) as Mesh
+          );
+          if (item.glowLevel !== undefined) {
+            (
+              this.scene.getMeshByName(item.glowMeshName)!
+                .material as PBRMaterial
+            ).emissiveIntensity = item.glowLevel;
+          }
+        }
       }
     }
 
@@ -1257,16 +1258,18 @@ export default class MainScene {
                 );
                 console.log(utterance);
                 utterance.lang = "en-US";
-                speechSynthesis.speak(utterance);
+                synth.speak(utterance);
               }, 400);
               if (meshToZoom.metadata.moreVoice) {
                 setTimeout(() => {
                   let utterance = new SpeechSynthesisUtterance(
                     meshToZoom.metadata.moreVoice
                   );
+                  utterance.lang = "en-US";
+                  utterance.rate = 0.5;
+                  //  utterance.pitch = 1.9;
                   console.log(utterance);
-
-                  speechSynthesis.speak(utterance);
+                  synth.speak(utterance);
                 }, 1400);
               }
             }
