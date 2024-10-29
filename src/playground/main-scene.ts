@@ -76,7 +76,10 @@ import {
 import { NiceLoader } from "./niceloader";
 import { wEffects } from "./effects";
 import { wSpeech } from "./speech";
-import { resolve } from "path";
+
+import { animateCamera, prepareAllCameras } from "./prepareAllCameras";
+import { prepareAudio } from "./prepareAudio";
+import { prepareLights, preparePipeLine, startBlur } from "./prepareLights";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -101,248 +104,30 @@ export default class MainScene {
     private canvas: HTMLCanvasElement,
     private engine: Engine
   ) {
-    this._setCamera(scene);
-    this._prepareFPSCamera();
+    //  this._setCamera(scene);
+    const cameras = new prepareAllCameras(scene);
+    this.camera = cameras.mainCamera;
+
     this._setAudio();
     this._setLight(scene);
-    this._setPipeLine();
+    preparePipeLine(scene);
     this.loadComponents();
   }
 
-  _setCamera(scene: Scene): void {
-    this.scene.clearColor = new Color4(0, 0, 0, 0);
-    document.body.style.backgroundImage = "img/cover1.png";
-    this.camera = new ArcRotateCamera(
-      "camera",
-      Tools.ToRadians(190),
-      Tools.ToRadians(70),
-      8,
-      Vector3.Zero(),
-      scene
-    );
-    this.camera.attachControl(this.canvas, true);
-    this.camera.setTarget(Vector3.Zero());
-    //
-    this.camera.minZ = 0.1;
-    this.camera.wheelDeltaPercentage = 0.01;
-    //
-
-    //
-  }
-
-  _prepareFPSCamera() {
-    const camera = new UniversalCamera(
-      "FirstViewCamera",
-      new Vector3(-4, 2, 0),
-      this.scene
-    );
-    camera.setTarget(Vector3.Zero());
-  }
-
-  _reverseCamera() {
-    const easingFunction = new CubicEase();
-    easingFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
-    const camera = this.scene.getCameraByName("camera") as ArcRotateCamera;
-    this.scene.activeCamera = camera;
-    camera.alpha = camera.alpha % (2 * Math.PI);
-    Animation.CreateAndStartAnimation(
-      "reverse",
-      camera,
-      "target",
-      60,
-      120,
-      camera.target,
-      new Vector3(-9.35, 0.75, -2.32),
-      Animation.ANIMATIONLOOPMODE_CONSTANT,
-      easingFunction
-    );
-    //  this.camera.setTarget(new Vector3(-9.346, 0.749, -2.316));
-    Animation.CreateAndStartAnimation(
-      "alpha",
-      camera,
-      "alpha",
-      60,
-      120,
-      camera.alpha,
-      0.495,
-      Animation.ANIMATIONLOOPMODE_CONSTANT,
-      easingFunction
-    );
-
-    // this.camera.rebuildAnglesAndRadius();
-    //this.camera.alpha = 0.6;
-    Animation.CreateAndStartAnimation(
-      "beta",
-      camera,
-      "beta",
-      60,
-      120,
-      camera.beta,
-      1.44,
-      Animation.ANIMATIONLOOPMODE_CONSTANT,
-      easingFunction
-    );
-
-    //  this.camera.beta = 1.5;
-    Animation.CreateAndStartAnimation(
-      "radius",
-      camera,
-      "radius",
-      60,
-      120,
-      camera.radius,
-      5,
-      Animation.ANIMATIONLOOPMODE_CONSTANT,
-      easingFunction
-    );
-    // this.camera.radius = 5;
-  }
-
+  //
   _setAudio() {
-    console.log(Engine.audioEngine);
-
-    this.radioSound = new Sound(
-      "gunshot",
-      "sound/fromsponsors_plus.mp3",
-      this.scene,
-      () => {
-        // Sound has been downloaded & decoded
-
-        if (!Engine.audioEngine!.unlocked) {
-          Engine.audioEngine!.unlock();
-        }
-      },
-      {
-        spatialSound: true,
-        loop: true,
-        maxDistance: 11,
-        // distanceModel: "linea",
-        //  rolloffFactor: 0.5,
-      }
-    );
-    this.morseSound = new Sound(
-      "morse",
-      "sound/morse.mp3",
-      this.scene,
-      () => {
-        // Sound has been downloaded & decoded
-
-        if (!Engine.audioEngine!.unlocked) {
-          Engine.audioEngine!.unlock();
-        }
-      },
-      {
-        spatialSound: true,
-        loop: true,
-        maxDistance: 11,
-        //  distanceModel: "exponential",
-      }
-    );
-    //
-    this.lightSwitchSound = new Sound(
-      "lightSwitch",
-      "sound/218115__mastersdisaster__switch-on-livingroom.wav",
-      this.scene,
-      () => {
-        // Sound has been downloaded & decoded
-
-        if (!Engine.audioEngine!.unlocked) {
-          Engine.audioEngine!.unlock();
-        }
-      }
-    );
-    //
-
-    // Unlock audio on first user interaction.
-    window.addEventListener(
-      "click",
-      () => {
-        if (!Engine.audioEngine!.unlocked) {
-          Engine.audioEngine!.unlock();
-          console.log(Engine.audioEngine);
-        }
-
-        document.getElementById("info")!.style.display = "none";
-      },
-      { once: true }
-    );
+    const audioArray = prepareAudio(this.scene);
+    [this.radioSound, this.morseSound, this.lightSwitchSound] = [...audioArray];
   }
-
   _setLight(scene: Scene): void {
-    scene.createDefaultEnvironment({
-      createGround: false,
-      createSkybox: false,
-    });
-    this.scene.environmentIntensity = 0.4;
-    //
-    const pointLight1 = new PointLight(
-      "pointLight1",
-      new Vector3(-0.6, 1.65, 0.15)
-    );
-    pointLight1.intensity = 4;
-    //
-    const pointLight2 = pointLight1.clone("pointLight2") as PointLight;
-    pointLight2.position.z = -1;
-    //
-    pointLight1.diffuse = new Color3(87 / 255, 167 / 255, 167 / 255);
-    //  pointLight2.diffuse = new Color3(200 / 255, 200 / 255, 90 / 255);
-    //
-    const pointLight3 = pointLight1.clone("pointLight3") as SpotLight;
-    pointLight3.position.z = -3;
-    //
-    const spotlight = new SpotLight(
-      "spotlight",
-      new Vector3(-2, 2.5, -4),
-      new Vector3(0.05, -1, 0.05),
-      3.9,
-      2
-    );
-    spotlight.intensity = 70;
-    spotlight.diffuse = new Color3(200 / 255, 200 / 255, 100 / 255);
-    this.spotLightArray.push(spotlight);
-    //
-    const spotlight2 = spotlight.clone("spotlight2") as SpotLight;
-    spotlight2.position.z = 4;
-    spotlight2.direction.x = -0.05;
-    spotlight2.direction.z = -0.05;
-    //
-    this.spotLightArray.push(spotlight2);
-
-    const spotlight3 = spotlight.clone("spotlight3") as SpotLight;
-    spotlight3.position.x = -8;
-    spotlight3.direction.z = -0.05;
-    //
-    this.spotLightArray.push(spotlight3);
-    //
+    prepareLights(scene, this.spotLightArray);
     this.spotLightState = true;
   }
-
-  _setPipeLine(): void {
-    const pipeline = new DefaultRenderingPipeline(
-      "workshop_pipeline",
-      false,
-      this.scene,
-      [this.scene.activeCamera!]
-    );
-    pipeline.fxaaEnabled = true;
-    pipeline.samples = 8;
-    // pipeline.imageProcessingEnabled = true
-    this.scene.imageProcessingConfiguration.toneMappingEnabled = true;
-    this.scene.imageProcessingConfiguration.toneMappingType = 1;
-
-    this.scene.imageProcessingConfiguration.exposure =
-      WORKSHOP.EXPOSURE.mainExposure;
-
-    //
-    //  pipeline.sharpenEnabled = true;
-  }
-
+  //
   async loadComponents(): Promise<void> {
     // Load your files in order
     new Ground(this.scene);
-    //
 
-    //
     //
     const aniSwitch = await loadAnimatedSwitch(
       "kit/switch1-opt.glb",
@@ -492,8 +277,10 @@ export default class MainScene {
           if (pickingInfo) {
             //   console.log(pickingInfo.mesh.name);
             if (
-              this.scene.activeCamera!.name == "camera" ||
-              this.scene.activeCamera!.name == "FirstViewCamera"
+              this.scene.activeCamera!.name ==
+                WORKSHOP.CAMERAS.mainCamera.name ||
+              this.scene.activeCamera!.name ==
+                WORKSHOP.CAMERAS.firstViewCamera.name
             ) {
               this.isPickedGood = true;
               this.meshPicked = pickingInfo.mesh;
@@ -610,7 +397,9 @@ export default class MainScene {
           this.scene.activeCamera!.detachControl();
           //
 
-          this.scene.activeCamera = this.scene.getCameraByName("camera");
+          this.scene.activeCamera = this.scene.getCameraByName(
+            WORKSHOP.CAMERAS.mainCamera.name
+          );
           this._fpsCameraActive = false;
           this.scene.activeCamera!.attachControl(this.canvas);
         } else {
@@ -630,10 +419,6 @@ export default class MainScene {
             console.log("isPickedGood ", this.isPickedGood);
             console.log(this.meshPicked.name);
             this.makeBlur();
-            /*
-            document.getElementById("top")!.innerHTML =
-              this.meshPicked.name + "<br> Press R to close";
-              */
           }
         }
       }
@@ -790,7 +575,7 @@ export default class MainScene {
       }
       //
       if (keyName === "k" || keyName === "K") {
-        this._reverseCamera();
+        animateCamera(this.scene);
       }
       //
       //
@@ -920,7 +705,7 @@ export default class MainScene {
       //
     }); // end event
     //
-    // retargetAnimations(this.scene);
+    //   retargetAnimations(this.scene); // !!! GOOD
     //
     this.scene.meshes.forEach((m) => {
       m.checkCollisions = true;
@@ -1164,7 +949,6 @@ export default class MainScene {
     this.scene.imageProcessingConfiguration.exposure =
       WORKSHOP.EXPOSURE.mainExposure;
     this.restoreCamera();
-    // this.roomPicker.setPickingList(this.pickArray);
   }
   //
 
@@ -1191,7 +975,7 @@ export default class MainScene {
         //
 
         const camera = new ArcRotateCamera(
-          "viewCamera",
+          WORKSHOP.CAMERAS.viewerCamera.name,
           -Math.PI,
           1.1,
           4,
@@ -1220,13 +1004,12 @@ export default class MainScene {
         //
 
         this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(
-          "workshop_pipeline",
+          WORKSHOP.PIPELINE.name,
           camera
         );
 
         //
         //
-
         camera.useFramingBehavior = true;
         camera.framingBehavior!.framingTime = 800;
         //
@@ -1350,9 +1133,13 @@ export default class MainScene {
     this.scene.activeCamera!.detachControl();
 
     if (this._fpsCameraActive) {
-      this.scene.activeCamera = this.scene.getCameraByName("FirstViewCamera");
+      this.scene.activeCamera = this.scene.getCameraByName(
+        WORKSHOP.CAMERAS.firstViewCamera.name
+      );
     } else {
-      this.scene.activeCamera = this.scene.getCameraByName("camera");
+      this.scene.activeCamera = this.scene.getCameraByName(
+        WORKSHOP.CAMERAS.mainCamera.name
+      );
     }
 
     this.scene.activeCamera!.attachControl();
@@ -1361,8 +1148,8 @@ export default class MainScene {
     }
     console.log(this.roomPicker);
     // document.getElementById("top")!.innerHTML = "";
-    if (this.scene.getCameraByName("viewCamera") !== undefined) {
-      this.scene.getCameraByName("viewCamera")!.dispose();
+    if (this.scene.getCameraByName(WORKSHOP.CAMERAS.viewerCamera.name)) {
+      this.scene.getCameraByName(WORKSHOP.CAMERAS.viewerCamera.name)!.dispose();
     }
 
     setTimeout(() => {
@@ -1375,21 +1162,23 @@ export default class MainScene {
 
   _setFPSCamera() {
     let camera;
-    if (!this.scene.getCameraByName("FirstViewCamera")) {
+    if (!this.scene.getCameraByName(WORKSHOP.CAMERAS.firstViewCamera.name)) {
       camera = new UniversalCamera(
-        "FirstViewCamera",
+        WORKSHOP.CAMERAS.firstViewCamera.name,
         new Vector3(-4, 2, 0),
         this.scene
       );
       camera.setTarget(Vector3.Zero());
     } else {
-      camera = this.scene.getCameraByName("FirstViewCamera");
+      camera = this.scene.getCameraByName(
+        WORKSHOP.CAMERAS.firstViewCamera.name
+      );
     }
 
     this._fpsCameraActive = true;
 
     this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(
-      "workshop_pipeline",
+      WORKSHOP.PIPELINE.name,
       camera
     );
 
@@ -1526,6 +1315,8 @@ export function retargetAnimations(scene: Scene) {
       console.log(avag);
       avag[0].play();
       avag[0].loopAnimation = true;
+
+      res.addAllToScene();
     });
 
     //
@@ -1562,7 +1353,6 @@ export function retargetAnimations(scene: Scene) {
       });
       animationGroups = [];
     }
-
     return avatarAGs;
   };
 }
@@ -1610,36 +1400,63 @@ export async function createCorridor(scene: Scene) {
     corridorWall_1,
     corridorWall_2
   );
-
+  /*
   const block = scene.getMeshByName("concreteblock") as Mesh;
   const blockRear = block.createInstance("blockRear");
   blockRear.scaling.scaleInPlace(4);
   blockRear.position.x = -19.5;
   blockRear.position.y = 3.75;
 
-  /*
+ 
 
 
-  
+ 
     const block = this.scene.getMeshByName("ceiling_lamp") as Mesh;
 
     var matrix = Matrix.Translation(-2, 2, 0);
 
     var idx = block.thinInstanceAdd(matrix);
     var idx2 = block.thinInstanceAddSelf();
-
+   
     var matrix2 = Matrix.Translation(-3, 1, 0);
 
     block.thinInstanceSetMatrixAt(idx2, matrix2);
-  const block = scene.getMeshByName("concreteblock") as Mesh;
-  console.log("block ", block);
-  let matrix = Matrix.Translation(-2, 2, 0);
+   
+  var sphere = scene.getMeshByName("azot") as Mesh;
 
-  var idx = block.thinInstanceAdd(matrix);
-  var idx2 = block.thinInstanceAddSelf();
-  let matrix2 = Matrix.Translation(2, 1, 0);
+  // Move the sphere upward 1/2 its height
+  sphere.position.y = 1;
 
-  block.thinInstanceSetMatrixAt(idx2, matrix2);
+  sphere.scaling.y = -1 * sphere.scaling.y;
+
+  var matrix = Matrix.Translation(-14, 2, 0);
+
+  var idx = sphere.thinInstanceAdd(matrix);
+  var idx2 = sphere.thinInstanceAddSelf();
+
+  var matrix2 = Matrix.Translation(2, 2, 12);
+
+  sphere.thinInstanceSetMatrixAt(idx2, matrix2);
+   */
+  /*
+//// works
+  const samplerArray = [
+    Matrix.Translation(0, 0, 0),
+    Matrix.Translation(-100, 10, 30),
+  ];
+
+  const imesh = scene.getMeshByName("firstaid") as Mesh;
+  // imesh.scaling.y = -1 * imesh.scaling.y;
+
+  thinize(samplerArray, [imesh]);
   */
-  // block!.thinInstanceAdd(Matrix.Translation(2, 2, 2));
+}
+
+export function thinize(array, meshArray) {
+  for (let i = 0; i < array.length; i++) {
+    //  console.log(array[i])
+    for (let m = 0; m < meshArray.length; m++) {
+      let ind = meshArray[m].thinInstanceAdd(array[i]);
+    }
+  }
 }
