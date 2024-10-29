@@ -311,11 +311,11 @@ export default class MainScene {
               }
 
               const imgOK = imageExists(imgSrc);
-
+              itemImage.style.visibility = "hidden";
               imgOK.then((res) => {
                 //   console.log(res);
                 if (res) {
-                  // itemImage.style.visibility = "initial";
+                  itemImage.style.visibility = "initial";
                   itemImage!.src = imgSrc;
                 } else {
                   itemImage!.src = "img/no-photo.png";
