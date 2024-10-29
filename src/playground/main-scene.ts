@@ -79,7 +79,7 @@ import { wSpeech } from "./speech";
 
 import { animateCamera, prepareAllCameras } from "./prepareAllCameras";
 import { prepareAudio } from "./prepareAudio";
-import { prepareLights, preparePipeLine, startBlur } from "./prepareLights";
+import { prepareLights, preparePipeLine } from "./prepareLights";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -104,36 +104,31 @@ export default class MainScene {
     private canvas: HTMLCanvasElement,
     private engine: Engine
   ) {
-    //  this._setCamera(scene);
-    const cameras = new prepareAllCameras(scene);
-    this.camera = cameras.mainCamera;
-
+    this.camera = new prepareAllCameras(scene).mainCamera;
     this._setAudio();
     this._setLight(scene);
     preparePipeLine(scene);
     this.loadComponents();
   }
-
   //
   _setAudio() {
     const audioArray = prepareAudio(this.scene);
     [this.radioSound, this.morseSound, this.lightSwitchSound] = [...audioArray];
   }
+  //
   _setLight(scene: Scene): void {
     prepareLights(scene, this.spotLightArray);
     this.spotLightState = true;
   }
-  //
+  // REMAKE later
   async loadComponents(): Promise<void> {
     // Load your files in order
     new Ground(this.scene);
-
     //
     const aniSwitch = await loadAnimatedSwitch(
       "kit/switch1-opt.glb",
       this.scene
     );
-    //console.log(aniSwitch);
     aniSwitch.meshes[0].name = "Light_Switch";
     aniSwitch.meshes[1].name = "Light_Switch";
     this.pickArray.push(aniSwitch.meshes[1] as Mesh);
@@ -142,7 +137,7 @@ export default class MainScene {
       action: "switchLight",
       longName: "Light Switch",
     };
-    //
+    // END to REMAKE
 
     //
     //
@@ -328,35 +323,21 @@ export default class MainScene {
                 }
               });
 
-              /*
-              itemImage!.src =
-                "https://babylonpress.org/wp-content/uploads/2020/12/logo-babylonpress-GB-s.png";
-              //
-*/
               //
               document.getElementById("top_container")!.style.display =
                 "initial";
-              //
-              /*
-              top.innerHTML =
-                pickingInfo.mesh.name + "<br>Press R to view closer";
-              //  console.log(pickingInfo.mesh.metadata.action);
-
-              */
+              // Check for metadata action
               if (pickingInfo.mesh.metadata.action !== undefined) {
                 switch (pickingInfo.mesh.metadata.action) {
                   case "switchLight":
-                    //  top.innerHTML += "<br>Press E to switch light";
                     itemAside!.style.display = "initial";
                     itemAside!.innerHTML = "Press E to switch light";
                     break;
                   case "Turn_Radio":
-                    //  top.innerHTML += "<br>Press E to switch radio";
                     itemAside!.style.display = "initial";
                     itemAside!.innerHTML = "Press E to switch radio";
                     break;
                   case "Turn_Morse":
-                    //  top.innerHTML += "<br>Press E to switch radio";
                     itemAside!.style.display = "initial";
                     itemAside!.innerHTML = "Press E to switch radio";
                     break;
@@ -370,17 +351,13 @@ export default class MainScene {
             }
           } else {
             this.isPickedGood = false;
-            //   top.innerHTML = "";
             itemAside!.style.display = "none";
             document.getElementById("top_container")!.style.display = "none";
           }
         });
     });
     //
-    // this._setFPSCamera();
-    //
-    //
-
+    // Event processing
     let OneKeyCounter = 0;
     let rKeyCounter = 0;
     let TwoKeyCounter = 0;
@@ -391,12 +368,11 @@ export default class MainScene {
     let jKeyCounter = 0;
     document.addEventListener("keyup", (event) => {
       const keyName = event.key;
+      // 1
       if (keyName === "1" || keyName === "!") {
         OneKeyCounter++;
         if (OneKeyCounter % 2 == 0) {
           this.scene.activeCamera!.detachControl();
-          //
-
           this.scene.activeCamera = this.scene.getCameraByName(
             WORKSHOP.CAMERAS.mainCamera.name
           );
@@ -407,6 +383,7 @@ export default class MainScene {
           this._setFPSCamera();
         }
       }
+      // R
       if (keyName === "r" || keyName === "R") {
         rKeyCounter++;
         if (rKeyCounter % 2 == 0) {
@@ -422,6 +399,7 @@ export default class MainScene {
           }
         }
       }
+      // 2
       if (keyName === "2" || keyName === "@") {
         TwoKeyCounter++;
         console.log("TwoKeyCounter", TwoKeyCounter);
@@ -435,7 +413,7 @@ export default class MainScene {
           120
         );
       }
-      //
+      // 3
       if (keyName === "3" || keyName === "#") {
         moveCamera(
           this.camera,
@@ -446,7 +424,7 @@ export default class MainScene {
           120
         );
       }
-      //
+      // E
       if (keyName === "e" || keyName === "E") {
         eKeyCounter++;
         console.log("eKeyCounter", eKeyCounter);
@@ -493,9 +471,6 @@ export default class MainScene {
           }
           //
           if (this.meshPicked.name === "old_radio") {
-            console.log("OLD");
-            //
-
             if (!this.radioSoundState) {
               (this.meshPicked.material as PBRMaterial).emissiveIntensity = 1;
               this.radioSound.setPosition(this.meshPicked.position);
@@ -528,14 +503,13 @@ export default class MainScene {
                   singleMeshesList.find((m) => m.name === "military_radio")
                     ?.glowLevel as number;
               }
-
               this.morseSound.stop();
               this.morseSoundState = false;
             }
           }
         }
       }
-      //
+      // T
       if (keyName === "t" || keyName === "T") {
         tKeyCounter++;
         if (tKeyCounter % 2 == 0) {
@@ -546,7 +520,7 @@ export default class MainScene {
           changeTex(mat, greyWood);
         }
       }
-      //
+      // Y
       if (keyName === "y" || keyName === "Y") {
         yKeyCounter++;
         if (yKeyCounter % 2 == 0) {
@@ -557,13 +531,13 @@ export default class MainScene {
           changeTex(mat, oldTiles, 5);
         }
       }
-      //
+      // I
       if (keyName === "i" || keyName === "I") {
         changeAva("kit/ava2-opt.glb", this.scene);
         this.alreadyImproved = true;
         itemAside!.style.display = "none";
       }
-      //
+      // L
       if (keyName === "l" || keyName === "L") {
         lKeyCounter++;
         console.log(lKeyCounter);
@@ -573,12 +547,11 @@ export default class MainScene {
           document.getElementById("top")!.style.display = "inline-block";
         }
       }
-      //
+      // K
       if (keyName === "k" || keyName === "K") {
         animateCamera(this.scene);
       }
-      //
-      //
+      // H
       if (keyName === "h" || keyName === "H") {
         document.getElementById("info")!.style.display = "inline-block";
         document.getElementById("info")!.innerHTML = WORKSHOP.INFO.afterLoading;
@@ -586,46 +559,18 @@ export default class MainScene {
           document.getElementById("info")!.style.display = "none";
         }, 3000);
       }
-      //
+      // P
       if (keyName === "p" || keyName === "P") {
         document.getElementById("info")!.style.display = "inline-block";
         document.getElementById("info")!.innerHTML =
           "<h3>Scene Statistics</h3>";
-        //
-
-        //
-        let statsString =
-          "<p>Meshes: " + this.scene.meshes.length.toString() + "</p>";
-        //
-        statsString +=
-          "<p>Materials: " + this.scene.materials.length.toString() + "</p>";
-        statsString +=
-          "<p>Textures: " + this.scene.textures.length.toString() + "</p>";
-        statsString +=
-          "<p>Animations: " +
-          this.scene.animationGroups.length.toString() +
-          "</p>";
-
-        statsString += "<p>Lights: " + this.scene.lights.length.toString();
-        ("</p>");
-        //@ts-ignore
-        statsString +=
-          "<p>Heap Used: " +
-          //@ts-ignore
-          (!performance.memory
-            ? "unavailabe"
-            : //@ts-ignore
-              (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed() +
-              " Mb");
-
-        //
+        let statsString = formStatString(this.scene);
         document.getElementById("info")!.innerHTML += statsString;
-        //
         setTimeout(() => {
           document.getElementById("info")!.style.display = "none";
         }, 4000);
       }
-      //
+      // M
       if (keyName === "m" || keyName === "M") {
         //  const wef = new wEffects(this.scene, this.camera);
         //    console.log(wef);
@@ -680,7 +625,7 @@ export default class MainScene {
 */
         //
       }
-      //
+      // J
       if (keyName === "j" || keyName === "J") {
         console.log("JJJJJ");
         jKeyCounter++;
@@ -706,14 +651,11 @@ export default class MainScene {
     }); // end event
     //
     //   retargetAnimations(this.scene); // !!! GOOD
-    //
+
+    // Move to materials processing
     this.scene.meshes.forEach((m) => {
       m.checkCollisions = true;
     });
-    //
-    //
-
-    //
     //
     //
     setTimeout(() => {
@@ -743,62 +685,19 @@ export default class MainScene {
     createCorridor(this.scene);
     //
 
-    const res10 = await SceneLoader.ImportMeshAsync(
-      "",
-      "kit/simple_short_crate-opt.glb"
-    );
-
-    const small_box = res10.meshes[1] as Mesh;
-    small_box.setParent(null);
-    res10.meshes[0].dispose();
-    small_box.scaling.scaleInPlace(0.1);
-
-    small_box.name = "small_box";
-
-    small_box.position = new Vector3(-0.2, 0.09, -4.7);
-    small_box.rotate(Vector3.Up(), Tools.ToRadians(-15), Space.WORLD);
-
-    const smbi = small_box.createInstance("smbi");
-    smbi.position.y = 0.28;
-    smbi.rotate(Vector3.Up(), Tools.ToRadians(35), Space.WORLD);
-    const smbi2 = small_box.createInstance("smbi2");
-    smbi2.position.y = 0.47;
-    smbi2.rotate(Vector3.Up(), Tools.ToRadians(0), Space.WORLD);
-    //
-    const smbi3 = small_box.createInstance("smbi3");
-    smbi3.position.y = 0.66;
-    smbi2.rotate(Vector3.Up(), Tools.ToRadians(20), Space.WORLD);
-    //
-    const ceiling_lamp = this.scene.getMeshByName("ceiling_lamp") as Mesh;
-
-    const c_lamp1 = ceiling_lamp.createInstance("c_lamp1");
-    c_lamp1.position.x = -2;
-    c_lamp1.position.z = 4;
-
-    const c_lamp2 = ceiling_lamp.createInstance("c_lamp2");
-    c_lamp2.position.x = -8;
-
-    //
-    //
+    await loadSmallBox(this.scene);
 
     //
     // changeAva("kit/ava2-opt.glb", this.scene);
     //
-
     const loadingScreen = document.getElementById("loading-screen");
-
     loadingScreen!.classList.add("fade-out");
     loadingScreen!.addEventListener("transitionend", onTransitionEnd);
-    //
-    // this.engine.loadingScreen.hideLoadingUI();
 
     function onTransitionEnd(event) {
       event.target.remove();
     }
-    //
-
-    //
-    //
+    // END OF ALL
   }
 
   async loadModels(
@@ -953,12 +852,6 @@ export default class MainScene {
   //
 
   prepareCamera(meshToZoom: Mesh) {
-    // Attach camera to canvas inputs
-    /*
-    const camera = this.scene.activeCamera!.clone(
-      "camClone"
-    ) as ArcRotateCamera;
-*/
     this.scene.activeCamera!.detachControl();
 
     Tools.CreateScreenshotUsingRenderTarget(
@@ -972,8 +865,6 @@ export default class MainScene {
 
         this.scene.environmentIntensity = 0.9;
 
-        //
-
         const camera = new ArcRotateCamera(
           WORKSHOP.CAMERAS.viewerCamera.name,
           -Math.PI,
@@ -982,38 +873,27 @@ export default class MainScene {
           Vector3.Zero()
         );
         camera.minZ = 0.1;
-
         camera.layerMask = 0x20000000;
-
-        this.scene.clearColor = new Color4(0, 0, 0, 0);
+        // this.scene.clearColor = new Color4(0, 0, 0, 0);
         this.scene.imageProcessingConfiguration.exposure =
           WORKSHOP.EXPOSURE.viewerExposure;
         this.scene.activeCamera = camera;
         camera.lowerRadiusLimit = 1.3;
-        camera.useBouncingBehavior = true;
-
-        camera.useAutoRotationBehavior = true;
-
         camera.pinchPrecision = 200 / camera.radius;
         camera.upperRadiusLimit = 5 * camera.radius;
-
         camera.wheelDeltaPercentage = 0.01;
         camera.pinchDeltaPercentage = 0.01;
-
+        camera.useBouncingBehavior = true;
+        camera.useAutoRotationBehavior = true;
         this.scene.activeCamera!.attachControl();
-        //
-
+        // Attach to pipeline
         this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(
           WORKSHOP.PIPELINE.name,
           camera
         );
-
-        //
-        //
         camera.useFramingBehavior = true;
         camera.framingBehavior!.framingTime = 800;
         //
-
         if (this.speechMode) {
           camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
             async () => {
@@ -1033,7 +913,6 @@ export default class MainScene {
                 };
               });
               console.log(synth.getVoices());
-
               //
               setTimeout(() => {
                 let utterance = new SpeechSynthesisUtterance(
@@ -1077,14 +956,8 @@ export default class MainScene {
           instancedMesh.layerMask = 0x20000000;
           instancedMesh.position = Vector3.Zero();
           instancedMesh.normalizeToUnitCube();
-          //   instancedMesh.rotationQuaternion = null;
-          console.log(meshToZoom.metadata);
+          //  console.log(meshToZoom.metadata);
           this.instaMesh = instancedMesh;
-
-          //
-
-          //
-
           camera.setTarget(instancedMesh);
         } else {
           const root = meshToZoom.parent as Mesh;
@@ -1092,21 +965,16 @@ export default class MainScene {
           const instancedRoot = root.instantiateHierarchy(undefined, {
             doNotInstantiate: true,
           });
-          console.log(instancedRoot);
+          //  console.log(instancedRoot);
           instancedRoot!.getChildMeshes().forEach((m) => {
             m.layerMask = 0x20000000;
             if (m.animations) {
-              //
-              console.log(m.name);
             }
           });
           instancedRoot!.position = new Vector3(0, 0, 0);
           instancedRoot!.normalizeToUnitCube();
 
           this.instaMesh = instancedRoot as Mesh;
-
-          //   camera.framingBehavior!.autoCorrectCameraLimitsAndSensibility = true;
-          //    camera.framingBehavior!.positionScale = 1;
 
           camera.framingBehavior!.zoomOnMeshHierarchy(
             instancedRoot as Mesh,
@@ -1121,8 +989,6 @@ export default class MainScene {
               */
             }
           );
-
-          //    camera.setTarget(instancedRoot as Mesh);
         }
       }
     );
@@ -1146,8 +1012,6 @@ export default class MainScene {
     if (this.instaMesh !== undefined) {
       this.instaMesh.dispose();
     }
-    console.log(this.roomPicker);
-    // document.getElementById("top")!.innerHTML = "";
     if (this.scene.getCameraByName(WORKSHOP.CAMERAS.viewerCamera.name)) {
       this.scene.getCameraByName(WORKSHOP.CAMERAS.viewerCamera.name)!.dispose();
     }
@@ -1174,20 +1038,13 @@ export default class MainScene {
         WORKSHOP.CAMERAS.firstViewCamera.name
       );
     }
-
     this._fpsCameraActive = true;
-
     this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(
       WORKSHOP.PIPELINE.name,
       camera
     );
-
     camera.ellipsoid = new Vector3(0.5, 1, 0.5);
     camera.speed = 0.2;
-
-    this.scene.collisionsEnabled = true;
-    this.scene.gravity.y = -0.08;
-
     camera.checkCollisions = true;
     camera.applyGravity = true;
     //Controls  WASD
@@ -1199,16 +1056,18 @@ export default class MainScene {
     camera.minZ = 0.1;
 
     const canvas = this.scene.getEngine().getRenderingCanvas();
-    //  this.scene.activeCamera?.detachControl();
     // this.engine.enterPointerlock();
     camera.attachControl(canvas, true);
     this.scene.activeCamera = camera;
+
+    this.scene.collisionsEnabled = true;
+    this.scene.gravity.y = -0.08;
 
     this.scene.meshes.forEach((m) => {
       m.checkCollisions = true;
     });
 
-    //
+    // pointerImage GUI
     /*
     const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
@@ -1459,4 +1318,61 @@ export function thinize(array, meshArray) {
       let ind = meshArray[m].thinInstanceAdd(array[i]);
     }
   }
+}
+export function formStatString(scene: Scene) {
+  let statString = "<p>Meshes: " + scene.meshes.length.toString() + "</p>";
+  //
+  statString += "<p>Materials: " + scene.materials.length.toString() + "</p>";
+  statString += "<p>Textures: " + scene.textures.length.toString() + "</p>";
+  statString +=
+    "<p>Animations: " + scene.animationGroups.length.toString() + "</p>";
+
+  statString += "<p>Lights: " + scene.lights.length.toString();
+  ("</p>");
+  //@ts-ignore
+  statString +=
+    "<p>Heap Used: " +
+    //@ts-ignore
+    (!performance.memory
+      ? "unavailabe"
+      : //@ts-ignore
+        (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed() + " Mb");
+
+  return statString;
+}
+
+export async function loadSmallBox(scene: Scene) {
+  const res10 = await SceneLoader.ImportMeshAsync(
+    "",
+    "kit/simple_short_crate-opt.glb"
+  );
+  const small_box = res10.meshes[1] as Mesh;
+  small_box.setParent(null);
+  res10.meshes[0].dispose();
+  small_box.scaling.scaleInPlace(0.1);
+
+  small_box.name = "small_box";
+
+  small_box.position = new Vector3(-0.2, 0.09, -4.7);
+  small_box.rotate(Vector3.Up(), Tools.ToRadians(-15), Space.WORLD);
+
+  const smbi = small_box.createInstance("smbi");
+  smbi.position.y = 0.28;
+  smbi.rotate(Vector3.Up(), Tools.ToRadians(35), Space.WORLD);
+  const smbi2 = small_box.createInstance("smbi2");
+  smbi2.position.y = 0.47;
+  smbi2.rotate(Vector3.Up(), Tools.ToRadians(0), Space.WORLD);
+  //
+  const smbi3 = small_box.createInstance("smbi3");
+  smbi3.position.y = 0.66;
+  smbi2.rotate(Vector3.Up(), Tools.ToRadians(20), Space.WORLD);
+  //
+  const ceiling_lamp = scene.getMeshByName("ceiling_lamp") as Mesh;
+
+  const c_lamp1 = ceiling_lamp.createInstance("c_lamp1");
+  c_lamp1.position.x = -2;
+  c_lamp1.position.z = 4;
+
+  const c_lamp2 = ceiling_lamp.createInstance("c_lamp2");
+  c_lamp2.position.x = -8;
 }
