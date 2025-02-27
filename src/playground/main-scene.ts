@@ -41,16 +41,16 @@ import {
   TonemappingOperator,
   ConvolutionPostProcess,
   LensRenderingPipeline,
+  ReflectiveShadowMap,
+  DirectionalLight,
+  GIRSMManager,
+  GIRSM,
 } from "@babylonjs/core/";
 import "@babylonjs/loaders";
 // import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
 import { Ground } from "./ground";
 
-import {
-  ISingleModelsOptions,
-  singleMeshesList,
-  complexMeshesList,
-} from "./singleMeshesList";
+import { ISingleModelsOptions, singleMeshesList, complexMeshesList } from "./singleMeshesList";
 import { WORKSHOP } from "./workshop";
 
 import { moveCamera } from "@/moveCamera";
@@ -80,6 +80,7 @@ import { wSpeech } from "./speech";
 import { animateCamera, prepareAllCameras } from "./prepareAllCameras";
 import { prepareAudio } from "./prepareAudio";
 import { prepareLights, preparePipeLine } from "./prepareLights";
+import { HtmlMesh, HtmlMeshRenderer } from "babylon-htmlmesh";
 
 export default class MainScene {
   private camera: ArcRotateCamera;
@@ -99,11 +100,7 @@ export default class MainScene {
   private alreadyImproved: boolean;
   private speechMode: boolean = false;
 
-  constructor(
-    private scene: Scene,
-    private canvas: HTMLCanvasElement,
-    private engine: Engine
-  ) {
+  constructor(private scene: Scene, private canvas: HTMLCanvasElement, private engine: Engine) {
     this.camera = new prepareAllCameras(scene).mainCamera;
     this._setAudio();
     this._setLight(scene);
@@ -125,10 +122,7 @@ export default class MainScene {
     // Load your files in order
     new Ground(this.scene);
     //
-    const aniSwitch = await loadAnimatedSwitch(
-      "kit/switch1-opt.glb",
-      this.scene
-    );
+    const aniSwitch = await loadAnimatedSwitch("kit/switch1-opt.glb", this.scene);
     aniSwitch.meshes[0].name = "Light_Switch";
     aniSwitch.meshes[1].name = "Light_Switch";
     this.pickArray.push(aniSwitch.meshes[1] as Mesh);
@@ -154,19 +148,11 @@ export default class MainScene {
     }
     //
     console.log("Complex loaded");
-    document.getElementById("info")!.innerHTML =
-      "Big models loaded, continue...";
+    document.getElementById("info")!.innerHTML = "Big models loaded, continue...";
     //
     //
     for (const item of singleMeshesList) {
-      await this.loadModels(
-        item.url,
-        item.name,
-        item.scalingFactor,
-        item.position,
-        item.options,
-        item.metadata
-      );
+      await this.loadModels(item.url, item.name, item.scalingFactor, item.position, item.options, item.metadata);
     }
 
     console.log("Single loaded");
@@ -176,6 +162,7 @@ export default class MainScene {
       m.maxSimultaneousLights = 8;
     });
     //
+
     //
     const top = document.createElement("div");
     top.style.width = "500px";
@@ -190,6 +177,7 @@ export default class MainScene {
     // top.innerHTML = "Press R to view closer";
     document.body.appendChild(top);
     top.style.display = "none";
+
     //
     const tmpArr = [];
     new NiceLoader(this.scene, tmpArr, {
@@ -204,9 +192,7 @@ export default class MainScene {
       if (item.glow) {
         gl.addIncludedOnlyMesh(this.scene.getMeshByName(item.name) as Mesh);
         if (item.glowLevel) {
-          (
-            this.scene.getMeshByName(item.name)!.material as PBRMaterial
-          ).emissiveIntensity = item.glowLevel;
+          (this.scene.getMeshByName(item.name)!.material as PBRMaterial).emissiveIntensity = item.glowLevel;
         }
       }
       if (!item.metadata?.doNotPick) {
@@ -219,14 +205,7 @@ export default class MainScene {
         console.log("MERGE");
         const root = this.scene.getMeshByName(item.name) as Mesh;
         console.log(root.getChildMeshes());
-        const merged = Mesh.MergeMeshes(
-          root.getChildMeshes(),
-          true,
-          undefined,
-          undefined,
-          true,
-          true
-        );
+        const merged = Mesh.MergeMeshes(root.getChildMeshes(), true, undefined, undefined, true, true);
         root.dispose();
         merged!.name = item.name;
         // merged!.position = item.position;
@@ -236,14 +215,9 @@ export default class MainScene {
 
       if (item.glow) {
         if (item.glowMeshName !== undefined) {
-          gl.addIncludedOnlyMesh(
-            this.scene.getMeshByName(item.glowMeshName) as Mesh
-          );
+          gl.addIncludedOnlyMesh(this.scene.getMeshByName(item.glowMeshName) as Mesh);
           if (item.glowLevel !== undefined) {
-            (
-              this.scene.getMeshByName(item.glowMeshName)!
-                .material as PBRMaterial
-            ).emissiveIntensity = item.glowLevel;
+            (this.scene.getMeshByName(item.glowMeshName)!.material as PBRMaterial).emissiveIntensity = item.glowLevel;
           }
         }
       }
@@ -261,101 +235,111 @@ export default class MainScene {
     //  console.log(this.roomPicker);
     console.log(this.pickArray);
     //
+    const htmlMeshRenderer = new HtmlMeshRenderer(this.scene);
+
+    // Shows how this can be used to include a website in your scene
+    // const siteUrl = "https://babylonpress.org/";
+    const siteUrl = "https://traditionpress.ru/";
+    const htmlMeshSite = new HtmlMesh(this.scene, "html-mesh-site");
+    const iframeSite = document.createElement("iframe");
+    iframeSite.src = siteUrl;
+    iframeSite.width = "960px";
+    iframeSite.height = "540px";
+    htmlMeshSite.setContent(iframeSite, 1.92, 1.08);
+    htmlMeshSite.position.x = -7;
+    htmlMeshSite.position.y = 1.2;
+    htmlMeshSite.position.z = 4.98;
     //
     const itemHeader = document.getElementById("itemHeader");
     const itemAside = document.getElementById("itemAside");
     const itemImage = document.getElementById("itemImage") as HTMLImageElement;
     this.scene.onPointerObservable.add(() => {
-      this.roomPicker
-        .pickAsync(this.scene.pointerX, this.scene.pointerY)
-        .then((pickingInfo) => {
-          if (pickingInfo) {
-            //   console.log(pickingInfo.mesh.name);
-            if (
-              this.scene.activeCamera!.name ==
-                WORKSHOP.CAMERAS.mainCamera.name ||
-              this.scene.activeCamera!.name ==
-                WORKSHOP.CAMERAS.firstViewCamera.name
-            ) {
-              this.isPickedGood = true;
-              this.meshPicked = pickingInfo.mesh;
-              //
-              if (pickingInfo.mesh.metadata.longName !== undefined) {
-                itemHeader!.innerHTML = pickingInfo.mesh.metadata.longName;
-              } else {
-                itemHeader!.innerHTML = pickingInfo.mesh.name;
-              }
-
-              //
-              if (
-                pickingInfo.mesh.metadata.mayBeImproved &&
-                !this.alreadyImproved
-              ) {
-                itemAside!.style.display = "initial";
-                itemAside!.innerHTML = "Press I to improve cloth quality";
-              }
-
-              if (this.alreadyImproved) {
-                itemAside!.style.display = "none";
-              }
-              //
-
-              let imgSrc = "img/" + pickingInfo.mesh.name + ".png";
-              if (pickingInfo.mesh.parent) {
-                imgSrc = "img/" + pickingInfo.mesh.parent.name + ".png";
-                if (pickingInfo.mesh.parent!.parent !== null) {
-                  console.log("MANY PARENTS");
-                  imgSrc =
-                    "img/" + pickingInfo.mesh.parent.parent.name + ".png";
-                }
-              }
-
-              const imgOK = imageExists(imgSrc);
-              itemImage.style.visibility = "hidden";
-              imgOK.then((res) => {
-                //   console.log(res);
-                if (res) {
-                  itemImage.style.visibility = "initial";
-                  itemImage!.src = imgSrc;
-                } else {
-                  itemImage!.src = "img/no-photo.png";
-                  // itemImage.style.visibility = "hidden";
-                }
-              });
-
-              //
-              document.getElementById("top_container")!.style.display =
-                "initial";
-              // Check for metadata action
-              if (pickingInfo.mesh.metadata.action !== undefined) {
-                switch (pickingInfo.mesh.metadata.action) {
-                  case "switchLight":
-                    itemAside!.style.display = "initial";
-                    itemAside!.innerHTML = "Press E to switch light";
-                    break;
-                  case "Turn_Radio":
-                    itemAside!.style.display = "initial";
-                    itemAside!.innerHTML = "Press E to switch radio";
-                    break;
-                  case "Turn_Morse":
-                    itemAside!.style.display = "initial";
-                    itemAside!.innerHTML = "Press E to switch radio";
-                    break;
-                  default:
-                    itemAside!.style.display = "none";
-                }
-              } else {
-                itemAside!.style.display = "none";
-              }
-              //
+      this.roomPicker.pickAsync(this.scene.pointerX, this.scene.pointerY).then((pickingInfo) => {
+        if (pickingInfo) {
+          //   console.log(pickingInfo.mesh.name);
+          if (
+            this.scene.activeCamera!.name == WORKSHOP.CAMERAS.mainCamera.name ||
+            this.scene.activeCamera!.name == WORKSHOP.CAMERAS.firstViewCamera.name
+          ) {
+            this.isPickedGood = true;
+            this.meshPicked = pickingInfo.mesh;
+            //
+            if (pickingInfo.mesh.metadata.longName !== undefined) {
+              itemHeader!.innerHTML = pickingInfo.mesh.metadata.longName;
+            } else {
+              itemHeader!.innerHTML = pickingInfo.mesh.name;
             }
-          } else {
-            this.isPickedGood = false;
-            itemAside!.style.display = "none";
-            document.getElementById("top_container")!.style.display = "none";
+
+            //
+            if (pickingInfo.mesh.metadata.mayBeImproved && !this.alreadyImproved) {
+              itemAside!.style.display = "initial";
+              itemAside!.innerHTML = "Press I to improve cloth quality";
+            }
+
+            if (this.alreadyImproved) {
+              itemAside!.style.display = "none";
+            }
+            //
+
+            let imgSrc = "img/" + pickingInfo.mesh.name + ".png";
+            if (pickingInfo.mesh.parent) {
+              imgSrc = "img/" + pickingInfo.mesh.parent.name + ".png";
+              if (pickingInfo.mesh.parent!.parent !== null) {
+                console.log("MANY PARENTS");
+                imgSrc = "img/" + pickingInfo.mesh.parent.parent.name + ".png";
+              }
+            }
+
+            const imgOK = imageExists(imgSrc);
+            itemImage.style.visibility = "hidden";
+            imgOK.then((res) => {
+              //   console.log(res);
+              if (res) {
+                itemImage.style.visibility = "initial";
+                itemImage!.src = imgSrc;
+              } else {
+                itemImage!.src = "img/no-photo.png";
+                // itemImage.style.visibility = "hidden";
+              }
+            });
+
+            //
+            document.getElementById("top_container")!.style.display = "initial";
+            // Check for metadata action
+            if (pickingInfo.mesh.metadata.action !== undefined) {
+              switch (pickingInfo.mesh.metadata.action) {
+                case "switchLight":
+                  itemAside!.style.display = "initial";
+                  itemAside!.innerHTML = "Press E to switch light";
+                  break;
+                case "Turn_Radio":
+                  itemAside!.style.display = "initial";
+                  itemAside!.innerHTML = "Press E to switch radio";
+                  break;
+                case "Turn_Morse":
+                  itemAside!.style.display = "initial";
+                  itemAside!.innerHTML = "Press E to switch radio";
+                  break;
+                default:
+                  itemAside!.style.display = "none";
+              }
+            } else {
+              itemAside!.style.display = "none";
+            }
+            //
           }
-        });
+        } else {
+          this.isPickedGood = false;
+          itemAside!.style.display = "none";
+          document.getElementById("top_container")!.style.display = "none";
+        }
+      });
     });
+    //
+
+    //
+
+    //
     //
     // Event processing
     let OneKeyCounter = 0;
@@ -373,9 +357,7 @@ export default class MainScene {
         OneKeyCounter++;
         if (OneKeyCounter % 2 == 0) {
           this.scene.activeCamera!.detachControl();
-          this.scene.activeCamera = this.scene.getCameraByName(
-            WORKSHOP.CAMERAS.mainCamera.name
-          );
+          this.scene.activeCamera = this.scene.getCameraByName(WORKSHOP.CAMERAS.mainCamera.name);
           this._fpsCameraActive = false;
           this.scene.activeCamera!.attachControl(this.canvas);
         } else {
@@ -404,25 +386,11 @@ export default class MainScene {
         TwoKeyCounter++;
         console.log("TwoKeyCounter", TwoKeyCounter);
 
-        moveCamera(
-          this.camera,
-          3.9,
-          1.06,
-          1.486,
-          new Vector3(-0.72, 0.87, -2.23),
-          120
-        );
+        moveCamera(this.camera, 3.9, 1.06, 1.486, new Vector3(-0.72, 0.87, -2.23), 120);
       }
       // 3
       if (keyName === "3" || keyName === "#") {
-        moveCamera(
-          this.camera,
-          1.33,
-          1.45,
-          4.1,
-          new Vector3(-3.09, 0.77, 0.67),
-          120
-        );
+        moveCamera(this.camera, 1.33, 1.45, 4.1, new Vector3(-3.09, 0.77, 0.67), 120);
       }
       // E
       if (keyName === "e" || keyName === "E") {
@@ -432,41 +400,27 @@ export default class MainScene {
           if (this.meshPicked.name === "Light_Switch") {
             if (this.spotLightState) {
               //
-              this.scene
-                .getAnimationGroupByName("switchLight")!
-                .start(false, 1, 60, 120);
-              this.scene
-                .getAnimationGroupByName("switchLight")!
-                .onAnimationEndObservable.addOnce(() => {
-                  this.spotLightArray.forEach((item) => {
-                    item.intensity = 0.1;
-                  });
-                  this.spotLightState = false;
-                  (
-                    this.scene.getMeshByName("ceiling_lamp")!
-                      .material as PBRMaterial
-                  ).emissiveIntensity = 0;
-                  this.lightSwitchSound.play();
+              this.scene.getAnimationGroupByName("switchLight")!.start(false, 1, 60, 120);
+              this.scene.getAnimationGroupByName("switchLight")!.onAnimationEndObservable.addOnce(() => {
+                this.spotLightArray.forEach((item) => {
+                  item.intensity = 0.1;
                 });
+                this.spotLightState = false;
+                (this.scene.getMeshByName("ceiling_lamp")!.material as PBRMaterial).emissiveIntensity = 0;
+                this.lightSwitchSound.play();
+              });
               //
             } else {
-              this.scene
-                .getAnimationGroupByName("switchLight")!
-                .start(false, 1, 0, 60);
+              this.scene.getAnimationGroupByName("switchLight")!.start(false, 1, 0, 60);
 
-              this.scene
-                .getAnimationGroupByName("switchLight")!
-                .onAnimationEndObservable.addOnce(() => {
-                  this.spotLightArray.forEach((item) => {
-                    item.intensity = 70;
-                  });
-                  this.spotLightState = true;
-                  (
-                    this.scene.getMeshByName("ceiling_lamp")!
-                      .material as PBRMaterial
-                  ).emissiveIntensity = 1;
-                  this.lightSwitchSound.play();
+              this.scene.getAnimationGroupByName("switchLight")!.onAnimationEndObservable.addOnce(() => {
+                this.spotLightArray.forEach((item) => {
+                  item.intensity = 70;
                 });
+                this.spotLightState = true;
+                (this.scene.getMeshByName("ceiling_lamp")!.material as PBRMaterial).emissiveIntensity = 1;
+                this.lightSwitchSound.play();
+              });
             }
           }
           //
@@ -479,9 +433,9 @@ export default class MainScene {
             } else {
               let gLevel = singleMeshesList.find((m) => m.name === "old_radio");
               if (gLevel !== undefined) {
-                (this.meshPicked.material as PBRMaterial).emissiveIntensity =
-                  singleMeshesList.find((m) => m.name === "old_radio")
-                    ?.glowLevel as number;
+                (this.meshPicked.material as PBRMaterial).emissiveIntensity = singleMeshesList.find(
+                  (m) => m.name === "old_radio"
+                )?.glowLevel as number;
               }
               this.radioSound.stop();
               this.radioSoundState = false;
@@ -495,13 +449,11 @@ export default class MainScene {
               this.morseSound.play();
               this.morseSoundState = true;
             } else {
-              let gLevel = singleMeshesList.find(
-                (m) => m.name === "military_radio"
-              );
+              let gLevel = singleMeshesList.find((m) => m.name === "military_radio");
               if (gLevel !== undefined) {
-                (this.meshPicked.material as PBRMaterial).emissiveIntensity =
-                  singleMeshesList.find((m) => m.name === "military_radio")
-                    ?.glowLevel as number;
+                (this.meshPicked.material as PBRMaterial).emissiveIntensity = singleMeshesList.find(
+                  (m) => m.name === "military_radio"
+                )?.glowLevel as number;
               }
               this.morseSound.stop();
               this.morseSoundState = false;
@@ -562,8 +514,7 @@ export default class MainScene {
       // P
       if (keyName === "p" || keyName === "P") {
         document.getElementById("info")!.style.display = "inline-block";
-        document.getElementById("info")!.innerHTML =
-          "<h3>Scene Statistics</h3>";
+        document.getElementById("info")!.innerHTML = "<h3>Scene Statistics</h3>";
         let statsString = formStatString(this.scene);
         document.getElementById("info")!.innerHTML += statsString;
         setTimeout(() => {
@@ -633,8 +584,7 @@ export default class MainScene {
         if (jKeyCounter % 2 == 0) {
           this.speechMode = false;
           document.getElementById("info")!.style.display = "block";
-          document.getElementById("info")!.innerHTML =
-            "<h3>Voice Mode Off</h3>";
+          document.getElementById("info")!.innerHTML = "<h3>Voice Mode Off</h3>";
           setTimeout(() => {
             document.getElementById("info")!.style.display = "none";
           }, 1000);
@@ -659,8 +609,7 @@ export default class MainScene {
     //
     //
     setTimeout(() => {
-      document.getElementById("info")!.innerHTML =
-        "Everything should be loaded";
+      document.getElementById("info")!.innerHTML = "Everything should be loaded";
     }, 200);
     setTimeout(() => {
       document.getElementById("info")!.style.top = "50%";
@@ -719,25 +668,13 @@ export default class MainScene {
       singlemesh.metadata = metadata;
     }
     if (options?.rotateX) {
-      singlemesh.rotate(
-        Vector3.Right(),
-        Tools.ToRadians(options.rotateX),
-        Space.WORLD
-      );
+      singlemesh.rotate(Vector3.Right(), Tools.ToRadians(options.rotateX), Space.WORLD);
     }
     if (options?.rotateY) {
-      singlemesh.rotate(
-        Vector3.Up(),
-        Tools.ToRadians(options.rotateY),
-        Space.WORLD
-      );
+      singlemesh.rotate(Vector3.Up(), Tools.ToRadians(options.rotateY), Space.WORLD);
     }
     if (options?.rotateZ) {
-      singlemesh.rotate(
-        Vector3.Forward(),
-        Tools.ToRadians(options.rotateZ),
-        Space.WORLD
-      );
+      singlemesh.rotate(Vector3.Forward(), Tools.ToRadians(options.rotateZ), Space.WORLD);
     }
   }
   //
@@ -772,21 +709,13 @@ export default class MainScene {
     }
     //
     if (options?.rotateX) {
-      root.rotate(
-        Vector3.Right(),
-        Tools.ToRadians(options.rotateX),
-        Space.WORLD
-      );
+      root.rotate(Vector3.Right(), Tools.ToRadians(options.rotateX), Space.WORLD);
     }
     if (options?.rotateY) {
       root.rotate(Vector3.Up(), Tools.ToRadians(options.rotateY), Space.WORLD);
     }
     if (options?.rotateZ) {
-      root.rotate(
-        Vector3.Forward(),
-        Tools.ToRadians(options.rotateZ),
-        Space.WORLD
-      );
+      root.rotate(Vector3.Forward(), Tools.ToRadians(options.rotateZ), Space.WORLD);
     }
   }
   //
@@ -818,10 +747,7 @@ export default class MainScene {
       kernel += 0.5;
       postProcess0.kernel = kernel;
       postProcess1.kernel = kernel;
-      if (
-        this.scene.imageProcessingConfiguration.exposure >
-        WORKSHOP.EXPOSURE.exposureThreshold
-      ) {
+      if (this.scene.imageProcessingConfiguration.exposure > WORKSHOP.EXPOSURE.exposureThreshold) {
         this.scene.imageProcessingConfiguration.exposure -= 0.01;
       }
       if (kernel >= 32) {
@@ -845,8 +771,7 @@ export default class MainScene {
     if (this.scene.getPostProcessByName("Vertical_blur")) {
       this.scene.getPostProcessByName("Vertical_blur")!.dispose();
     }
-    this.scene.imageProcessingConfiguration.exposure =
-      WORKSHOP.EXPOSURE.mainExposure;
+    this.scene.imageProcessingConfiguration.exposure = WORKSHOP.EXPOSURE.mainExposure;
     this.restoreCamera();
   }
   //
@@ -854,91 +779,71 @@ export default class MainScene {
   prepareCamera(meshToZoom: Mesh) {
     this.scene.activeCamera!.detachControl();
 
-    Tools.CreateScreenshotUsingRenderTarget(
-      this.engine,
-      this.scene.activeCamera!,
-      { precision: 1.0 },
-      (data) => {
-        document.body.style.backgroundImage = "url(" + data + ")";
-        document.body.style.backgroundRepeat = "no-repeat";
-        document.body.style.backgroundSize = "cover";
+    Tools.CreateScreenshotUsingRenderTarget(this.engine, this.scene.activeCamera!, { precision: 1.0 }, (data) => {
+      document.body.style.backgroundImage = "url(" + data + ")";
+      document.body.style.backgroundRepeat = "no-repeat";
+      document.body.style.backgroundSize = "cover";
 
-        this.scene.environmentIntensity = 0.9;
+      this.scene.environmentIntensity = 0.9;
 
-        const camera = new ArcRotateCamera(
-          WORKSHOP.CAMERAS.viewerCamera.name,
-          -Math.PI,
-          1.1,
-          4,
-          Vector3.Zero()
-        );
-        camera.minZ = 0.1;
-        camera.layerMask = 0x20000000;
-        // this.scene.clearColor = new Color4(0, 0, 0, 0);
-        this.scene.imageProcessingConfiguration.exposure =
-          WORKSHOP.EXPOSURE.viewerExposure;
-        this.scene.activeCamera = camera;
-        camera.lowerRadiusLimit = 1.3;
-        camera.pinchPrecision = 200 / camera.radius;
-        camera.upperRadiusLimit = 5 * camera.radius;
-        camera.wheelDeltaPercentage = 0.01;
-        camera.pinchDeltaPercentage = 0.01;
-        camera.useBouncingBehavior = true;
-        camera.useAutoRotationBehavior = true;
-        this.scene.activeCamera!.attachControl();
-        // Attach to pipeline
-        this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(
-          WORKSHOP.PIPELINE.name,
-          camera
-        );
-        camera.useFramingBehavior = true;
-        camera.framingBehavior!.framingTime = 800;
-        //
-        if (this.speechMode) {
-          camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
-            async () => {
-              //
-              const synth = window.speechSynthesis;
-              console.log(synth.getVoices());
+      const camera = new ArcRotateCamera(WORKSHOP.CAMERAS.viewerCamera.name, -Math.PI, 1.1, 4, Vector3.Zero());
+      camera.minZ = 0.1;
+      camera.layerMask = 0x20000000;
+      // this.scene.clearColor = new Color4(0, 0, 0, 0);
+      this.scene.imageProcessingConfiguration.exposure = WORKSHOP.EXPOSURE.viewerExposure;
+      this.scene.activeCamera = camera;
+      camera.lowerRadiusLimit = 1.3;
+      camera.pinchPrecision = 200 / camera.radius;
+      camera.upperRadiusLimit = 5 * camera.radius;
+      camera.wheelDeltaPercentage = 0.01;
+      camera.pinchDeltaPercentage = 0.01;
+      camera.useBouncingBehavior = true;
+      camera.useAutoRotationBehavior = true;
+      this.scene.activeCamera!.attachControl();
+      // Attach to pipeline
+      this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(WORKSHOP.PIPELINE.name, camera);
+      camera.useFramingBehavior = true;
+      camera.framingBehavior!.framingTime = 800;
+      //
+      if (this.speechMode) {
+        camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(async () => {
+          //
+          const synth = window.speechSynthesis;
+          console.log(synth.getVoices());
 
-              const vp = await new Promise((resolve) => {
-                let voices = synth.getVoices();
-                if (voices.length) {
-                  resolve(voices);
-                  return;
-                }
-                synth.onvoiceschanged = () => {
-                  voices = synth.getVoices();
-                  if (voices.length) resolve(voices);
-                };
-              });
-              console.log(synth.getVoices());
-              //
-              setTimeout(() => {
-                let utterance = new SpeechSynthesisUtterance(
-                  meshToZoom.metadata.longName
-                );
-                console.log(utterance);
-                utterance.lang = "en-US";
-                synth.speak(utterance);
-              }, 400);
-              if (meshToZoom.metadata.moreVoice) {
-                setTimeout(() => {
-                  let utterance = new SpeechSynthesisUtterance(
-                    meshToZoom.metadata.moreVoice
-                  );
-                  utterance.lang = "en-US";
-                  utterance.rate = 0.5;
-                  //  utterance.pitch = 1.9;
-                  console.log(utterance);
-                  synth.speak(utterance);
-                }, 1400);
-              }
+          const vp = await new Promise((resolve) => {
+            let voices = synth.getVoices();
+            if (voices.length) {
+              resolve(voices);
+              return;
             }
-          );
-        }
-        //
-        /*
+            synth.onvoiceschanged = () => {
+              voices = synth.getVoices();
+              if (voices.length) resolve(voices);
+            };
+          });
+          console.log(synth.getVoices());
+          //
+          setTimeout(() => {
+            let utterance = new SpeechSynthesisUtterance(meshToZoom.metadata.longName);
+            console.log(utterance);
+            utterance.lang = "en-US";
+            synth.speak(utterance);
+          }, 400);
+          if (meshToZoom.metadata.moreVoice) {
+            setTimeout(() => {
+              let utterance = new SpeechSynthesisUtterance(meshToZoom.metadata.moreVoice);
+              utterance.lang = "en-US";
+              utterance.rate = 0.5;
+              //  utterance.pitch = 1.9;
+              console.log(utterance);
+              synth.speak(utterance);
+            }, 1400);
+          }
+        });
+      }
+      //
+      /*
 // Screenshot for image thumbnails
         camera.framingBehavior!.onTargetFramingAnimationEndObservable.addOnce(
           () => {
@@ -951,47 +856,42 @@ export default class MainScene {
         );
 // End screenshot
 */
-        if (!meshToZoom.parent) {
-          const instancedMesh = meshToZoom.clone(meshToZoom.name + "_inst");
-          instancedMesh.layerMask = 0x20000000;
-          instancedMesh.position = Vector3.Zero();
-          instancedMesh.normalizeToUnitCube();
-          //  console.log(meshToZoom.metadata);
-          this.instaMesh = instancedMesh;
-          camera.setTarget(instancedMesh);
-        } else {
-          const root = meshToZoom.parent as Mesh;
-          console.log(root);
-          const instancedRoot = root.instantiateHierarchy(undefined, {
-            doNotInstantiate: true,
-          });
-          //  console.log(instancedRoot);
-          instancedRoot!.getChildMeshes().forEach((m) => {
-            m.layerMask = 0x20000000;
-            if (m.animations) {
-            }
-          });
-          instancedRoot!.position = new Vector3(0, 0, 0);
-          instancedRoot!.normalizeToUnitCube();
+      if (!meshToZoom.parent) {
+        const instancedMesh = meshToZoom.clone(meshToZoom.name + "_inst");
+        instancedMesh.layerMask = 0x20000000;
+        instancedMesh.position = Vector3.Zero();
+        instancedMesh.normalizeToUnitCube();
+        //  console.log(meshToZoom.metadata);
+        this.instaMesh = instancedMesh;
+        camera.setTarget(instancedMesh);
+      } else {
+        const root = meshToZoom.parent as Mesh;
+        console.log(root);
+        const instancedRoot = root.instantiateHierarchy(undefined, {
+          doNotInstantiate: true,
+        });
+        //  console.log(instancedRoot);
+        instancedRoot!.getChildMeshes().forEach((m) => {
+          m.layerMask = 0x20000000;
+          if (m.animations) {
+          }
+        });
+        instancedRoot!.position = new Vector3(0, 0, 0);
+        instancedRoot!.normalizeToUnitCube();
 
-          this.instaMesh = instancedRoot as Mesh;
+        this.instaMesh = instancedRoot as Mesh;
 
-          camera.framingBehavior!.zoomOnMeshHierarchy(
-            instancedRoot as Mesh,
-            undefined,
-            () => {
-              /*
+        camera.framingBehavior!.zoomOnMeshHierarchy(instancedRoot as Mesh, undefined, () => {
+          /*
               Tools.CreateScreenshotUsingRenderTarget(
                 this.engine,
                 this.scene.activeCamera!,
                 { precision: 0.5 }
               );
               */
-            }
-          );
-        }
+        });
       }
-    );
+    });
   }
   //
   restoreCamera() {
@@ -999,13 +899,9 @@ export default class MainScene {
     this.scene.activeCamera!.detachControl();
 
     if (this._fpsCameraActive) {
-      this.scene.activeCamera = this.scene.getCameraByName(
-        WORKSHOP.CAMERAS.firstViewCamera.name
-      );
+      this.scene.activeCamera = this.scene.getCameraByName(WORKSHOP.CAMERAS.firstViewCamera.name);
     } else {
-      this.scene.activeCamera = this.scene.getCameraByName(
-        WORKSHOP.CAMERAS.mainCamera.name
-      );
+      this.scene.activeCamera = this.scene.getCameraByName(WORKSHOP.CAMERAS.mainCamera.name);
     }
 
     this.scene.activeCamera!.attachControl();
@@ -1027,22 +923,13 @@ export default class MainScene {
   _setFPSCamera() {
     let camera;
     if (!this.scene.getCameraByName(WORKSHOP.CAMERAS.firstViewCamera.name)) {
-      camera = new UniversalCamera(
-        WORKSHOP.CAMERAS.firstViewCamera.name,
-        new Vector3(-4, 2, 0),
-        this.scene
-      );
+      camera = new UniversalCamera(WORKSHOP.CAMERAS.firstViewCamera.name, new Vector3(-4, 2, 0), this.scene);
       camera.setTarget(Vector3.Zero());
     } else {
-      camera = this.scene.getCameraByName(
-        WORKSHOP.CAMERAS.firstViewCamera.name
-      );
+      camera = this.scene.getCameraByName(WORKSHOP.CAMERAS.firstViewCamera.name);
     }
     this._fpsCameraActive = true;
-    this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(
-      WORKSHOP.PIPELINE.name,
-      camera
-    );
+    this.scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline(WORKSHOP.PIPELINE.name, camera);
     camera.ellipsoid = new Vector3(0.5, 1, 0.5);
     camera.speed = 0.2;
     camera.checkCollisions = true;
@@ -1120,13 +1007,9 @@ export async function imageExists(imgUrl: string) {
 }
 
 export function changeTex(mat, data, tiles?) {
-  (mat.albedoTexture as Texture).updateURL(
-    "texture/" + data.folder + data.albedo
-  );
+  (mat.albedoTexture as Texture).updateURL("texture/" + data.folder + data.albedo);
   (mat.bumpTexture as Texture).updateURL("texture/" + data.folder + data.bump);
-  (mat.metallicTexture as Texture).updateURL(
-    "texture/" + data.folder + data.metallic
-  );
+  (mat.metallicTexture as Texture).updateURL("texture/" + data.folder + data.metallic);
   (mat.ambientTexture as Texture).updateURL("texture/" + data.folder + data.ao);
   if (tiles !== undefined) {
     mat.textures.forEach((t) => {
@@ -1143,17 +1026,11 @@ export async function changeAva(url: string, scene: Scene) {
 
   const mat = scene.getMeshByName("Wolf3D_Avatar")!.material as PBRMaterial;
   mat.albedoTexture!.dispose();
-  mat.albedoTexture = res.textures.find((t) =>
-    t.name.includes("Base")
-  ) as Texture;
+  mat.albedoTexture = res.textures.find((t) => t.name.includes("Base")) as Texture;
   mat.bumpTexture!.dispose();
-  mat.bumpTexture = res.textures.find((t) =>
-    t.name.includes("Normal")
-  ) as Texture;
+  mat.bumpTexture = res.textures.find((t) => t.name.includes("Normal")) as Texture;
   mat.metallicTexture!.dispose();
-  mat.metallicTexture = res.textures.find((t) =>
-    t.name.includes("Rough")
-  ) as Texture;
+  mat.metallicTexture = res.textures.find((t) => t.name.includes("Rough")) as Texture;
 }
 
 export function retargetAnimations(scene: Scene) {
@@ -1183,10 +1060,7 @@ export function retargetAnimations(scene: Scene) {
 
   let animationGroups: AnimationGroup[];
 
-  const applyAnimationGroups = (
-    ags: AnimationGroup[],
-    avatarContainer: AssetContainer
-  ) => {
+  const applyAnimationGroups = (ags: AnimationGroup[], avatarContainer: AssetContainer) => {
     const avatarAGs: AnimationGroup[] = [];
 
     const avatarRoot = avatarContainer.meshes[0];
@@ -1221,12 +1095,7 @@ export async function createCorridor(scene: Scene) {
     width: 10,
     height: 10,
   });
-  corridorWall_1.material = createMaterial(
-    "texture/",
-    oldStone,
-    "corridorWall_1",
-    5
-  );
+  corridorWall_1.material = createMaterial("texture/", oldStone, "corridorWall_1", 5);
   corridorWall_1.rotation.y = Math.PI;
   corridorWall_1.position.x = -15;
   corridorWall_1.position.z = -2.9;
@@ -1236,29 +1105,19 @@ export async function createCorridor(scene: Scene) {
   corridorWall_2.rotation.y = 2 * Math.PI;
   corridorWall_2.position.z = 2.9;
   //
-  const corridorLightGreen = new PointLight(
-    "corridorLightGreen",
-    new Vector3(-16, 2.9, 1)
-  );
+  const corridorLightGreen = new PointLight("corridorLightGreen", new Vector3(-16, 2.9, 1));
   corridorLightGreen.intensity = 4;
   corridorLightGreen.diffuse = Color3.Green();
   const door = scene.getMeshByName("bigdoor")!;
   (door.material as PBRMaterial).environmentIntensity = 0.5;
   corridorLightGreen.includedOnlyMeshes.push(door, corridorWall_1);
 
-  const corridorLightWhite = new PointLight(
-    "corridorLightWhite",
-    new Vector3(-16, 2.95, -1.25)
-  );
+  const corridorLightWhite = new PointLight("corridorLightWhite", new Vector3(-16, 2.95, -1.25));
   corridorLightWhite.intensity = 4;
   corridorLightWhite.diffuse = Color3.White();
 
   // corridorLightGreen.excludedMeshes.push(scene)
-  corridorLightWhite.includedOnlyMeshes.push(
-    door,
-    corridorWall_1,
-    corridorWall_2
-  );
+  corridorLightWhite.includedOnlyMeshes.push(door, corridorWall_1, corridorWall_2);
   /*
   const block = scene.getMeshByName("concreteblock") as Mesh;
   const blockRear = block.createInstance("blockRear");
@@ -1324,8 +1183,7 @@ export function formStatString(scene: Scene) {
   //
   statString += "<p>Materials: " + scene.materials.length.toString() + "</p>";
   statString += "<p>Textures: " + scene.textures.length.toString() + "</p>";
-  statString +=
-    "<p>Animations: " + scene.animationGroups.length.toString() + "</p>";
+  statString += "<p>Animations: " + scene.animationGroups.length.toString() + "</p>";
 
   statString += "<p>Lights: " + scene.lights.length.toString();
   ("</p>");
@@ -1342,10 +1200,7 @@ export function formStatString(scene: Scene) {
 }
 
 export async function loadSmallBox(scene: Scene) {
-  const res10 = await SceneLoader.ImportMeshAsync(
-    "",
-    "kit/simple_short_crate-opt.glb"
-  );
+  const res10 = await SceneLoader.ImportMeshAsync("", "kit/simple_short_crate-opt.glb");
   const small_box = res10.meshes[1] as Mesh;
   small_box.setParent(null);
   res10.meshes[0].dispose();
