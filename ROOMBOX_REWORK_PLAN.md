@@ -6,6 +6,17 @@ Rework the existing workshop into a self-contained, open-front roombox.
 
 The scene will retain most existing models while replacing the current room shell, lighting, layout, and scene organization. There will be no doors, corridor, or implied continuation beyond the room.
 
+## Application Boundary
+
+Build the rework as a separate application in `roombox-app/` rather than modifying the existing application in place.
+
+- Use the latest stable Vite, TypeScript, Babylon core, and Babylon loaders packages.
+- Give the app its own `package.json`, TypeScript configuration, Vite configuration, HTML entry point, source tree, and `public/assets` directory.
+- Do not import source files or public assets through parent-directory paths.
+- Copy only selected workshop models and textures into the new app as they are approved for the new composition.
+- Keep the folder portable so it can later be moved into a separate repository without structural changes.
+- Leave the existing application operational as a reference while the roombox is developed.
+
 ## Creative Direction
 
 The result should feel like a carefully composed interactive workshop diorama rather than a complete building.
@@ -24,8 +35,8 @@ Keep all dimensions in one configuration object so the shell, camera, lighting, 
 
 ```ts
 export const ROOMBOX = {
-  width: 12,
-  depth: 8,
+  width: 10,
+  depth: 10,
   height: 4,
   wallThickness: 0.18,
   floorThickness: 0.2,
@@ -33,7 +44,7 @@ export const ROOMBOX = {
 };
 ```
 
-The final values can be adjusted after the retained models are placed in a test shell.
+These dimensions preserve the original workshop room coordinates (`x: -10…0`, `z: -5…5`) so retained models keep their original positions and rotations. The workbench keeps its original `(-0.4, 0, 0)` transform and is handled through the complex-GLB root path rather than the single-mesh parent-removal path.
 
 ## Room Shell
 
@@ -42,8 +53,8 @@ Replace the current plane-based `Ground` implementation with a dedicated roombox
 Create:
 
 1. A shallow floor box.
-2. A back-wall box.
-3. Left- and right-wall boxes.
+2. A workbench-wall box at `x = 0`.
+3. Side-wall boxes at `z = -5` and `z = 5`.
 4. Optional wall trim or a darker lower-wall band.
 
 Do not create:
@@ -52,6 +63,8 @@ Do not create:
 - Doors or door openings.
 - A corridor.
 - A ceiling, beams, or upper frame.
+
+The cutaway remains open toward `x = -10`, matching the original camera and workbench orientation. Do not create a wall on that open side.
 
 Box geometry will provide convincing edges, thickness, shadows, and better corner joins. All shell meshes should be non-pickable and receive shadows where appropriate.
 
@@ -92,7 +105,8 @@ Retain most models, but organize them into readable groups rather than distribut
 
 ### Industrial storage group
 
-- Fridges, gas cylinders, pallet, bins, crates, bucket, and broom.
+- One fridge, gas cylinders, pallet, bins, crates, bucket, and broom.
+- Select a single fridge model during the asset-inventory pass; do not retain a second fridge.
 - Kept visually quieter than the focal group through placement and material contrast.
 - Some vertical stacking to improve the silhouette.
 
@@ -153,7 +167,7 @@ Remove the corridor lights and the current high-intensity, overlapping light set
 Break scene construction into focused modules:
 
 ```text
-src/playground/
+roombox-app/src/
   scene/
     createWorkshopScene.ts
     roomboxConfig.ts
@@ -201,6 +215,7 @@ The exact filenames can remain flexible, but `MainScene` should become an orches
 
 ### Phase 1: Establish the shell
 
+- Scaffold the independent Vite, TypeScript, and Babylon application.
 - Add the shared roombox configuration.
 - Build the floor and three walls from boxes.
 - Remove the old wall planes, door-dependent geometry, and corridor creation.
